@@ -120,14 +120,14 @@ makePeriods (zNonRep, zRep) (oNonRep, oRep) = (nonRepeat, rep)
             | otherwise = zip (zNonRep ++ concat (repeat zRep)) oNonRep
         newZRep = rotate (length nonRepeat - length zNonRep) zRep
         newORep = rotate (length nonRepeat - length oNonRep) oRep
-        rep = zipUntilRepeat (cycle newZRep) $ cycle newORep
+        rep = zipUntilRepeat (max (length newZRep) (length newORep)) (cycle newZRep) $ cycle newORep
 
-zipUntilRepeat = zipUntilRepeat' []
+zipUntilRepeat minL = zipUntilRepeat' []
     where
         zipUntilRepeat' acc _ [] = acc
         zipUntilRepeat' acc [] _ = acc
         zipUntilRepeat' acc (x:xs) (y:ys)
-            | (x, y) `elem` acc = acc
+            | (x, y) `elem` acc && length acc >= minL = acc
             | otherwise = zipUntilRepeat' (acc ++ [(x,y)]) xs ys
 
 genStartStartTrans n m alphabet destStates state =
