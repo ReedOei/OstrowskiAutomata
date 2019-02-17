@@ -1,6 +1,6 @@
 name:                Ostrowski
 version:             0.1.0.0
-github:              "ReedOei/Ostrowski"
+github:              "ReedOei/OstrowskiAutomata"
 license:             BSD3
 author:              "Reed Oei"
 maintainer:          "oei.reed@gmail.com"
@@ -17,16 +17,20 @@ extra-source-files:
 # To avoid duplicated efforts in documentation and dealing with the
 # complications of embedding Haddock markup inside cabal files, it is
 # common to point users to the README.md file.
-description:         Please see the README on GitHub at <https://github.com/ReedOei/Ostrowski#readme>
+description:         Please see the README on GitHub at <https://github.com/ReedOei/OstrowskiAutomata#readme>
 
 dependencies:
 - base >= 4.7 && < 5
+- containers
+- lens
+- QuickCheck
+- hspec
 
 library:
   source-dirs: src
 
 executables:
-  Ostrowski-exe:
+  Ostrowski:
     main:                Main.hs
     source-dirs:         app
     ghc-options:
@@ -46,3 +50,4 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - Ostrowski
+
