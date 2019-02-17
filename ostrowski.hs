@@ -216,8 +216,6 @@ sturmian reps = map (go . rep reps) [1..]
     where
         go val = if zeroEndingParity val then 0 else 1
 
-constantGap = concat . repeat
-
 repSturmian (rep:zRep) oRep (0:xs) = rep : repSturmian zRep oRep xs
 repSturmian zRep (rep:oRep) (1:xs) = rep : repSturmian zRep oRep xs
 
@@ -235,7 +233,7 @@ testAutomata alphabet zRep oRep reps zPeriod oPeriod n =
     where
         states = genAutomata alphabet zPeriod oPeriod zRep oRep
         fromAutomata = take n $ automataOutput states $ map (reverse . rep reps) [1..]
-        actual = take n $ repSturmian (constantGap zRep) (constantGap oRep) $ sturmian reps
+        actual = take n $ repSturmian (cycle zRep) (cycle oRep) $ sturmian reps
 
 class WalnutOutput a where
     walnutStr :: a -> String
