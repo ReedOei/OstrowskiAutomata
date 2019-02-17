@@ -23,6 +23,10 @@ increasing(N, Next) :-
     N1 #= N + 1,
     increasing(N1, Next).
 
+list(N, L) :-
+    increasing(N, LN),
+    length(L, LN).
+
 list(L) :-
     increasing(N),
     length(L, N).
@@ -77,20 +81,22 @@ make_transitions(Alphabet, [state(_, _, Transitions)|States]) :-
 
 examples(Alphabet, Examples, States) :-
     list(States),
-    label_states(States, 0),
-    writeln(States),
     length(States, N),
     N #>= 16,
+    label_states(States, 0),
     make_transitions(Alphabet, States),
+    writeln(States),
     examples_run(Alphabet, Examples, States).
 
 atom_to_transition(Atom, In -> Out) :-
+    (var(Out) -> Out = 0; true),
     term_to_atom(In -> Out, Atom).
 
 atom_to_state(Atom, state(Label, Output, Transitions)) :-
     maplist(atom_to_transition, Atoms, Transitions),
 
     term_to_atom(LabelAtom, Label),
+    (var(Output) -> Output = -1; true),
     term_to_atom(OutputAtom, Output),
     atomic_list_concat([LabelAtom, OutputAtom], ' ', StateLine),
 
@@ -116,6 +122,7 @@ examples_run(Alphabet, [Word -> Output|Examples], States) :-
     Automata = automata(Alphabet, States),
 
     run(Automata, Word, Output),
+    length(Examples, L),
     examples_run(Alphabet, Examples, States).
 
 all_output(Automata, Words, Output) :-
@@ -137,10 +144,8 @@ run_from(state(_, Output, _), _, [], Output).
 run_from(state(_, _, Transitions), Automata, [X|Xs], Output) :-
     Automata = automata(_, States),
 
-    member(X -> St, Transitions),
-
-    member(State, States),
-    State = state(St, _, _),
+    nth0(X, Transitions, _ -> St),
+    nth0(St, States, State),
 
     run_from(State, Automata, Xs, Output).
 
