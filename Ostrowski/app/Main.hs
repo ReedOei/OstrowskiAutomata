@@ -33,7 +33,7 @@ main = do
             let oRep = read oRepStr
             let reps = read nonRepStr ++ cycle (read repsStr)
 
-            let automata = makeAutomata alphabet zRep oRep reps
+            let automata = prune $ makeAutomata alphabet zRep oRep reps
 
             writeFile (wordName ++ ".txt") $ walnutOutput numSys automata
 
