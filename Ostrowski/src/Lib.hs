@@ -40,8 +40,17 @@ chunk n xs =
 
 t xs = fromJust $ find (\periodicPart -> all (and . zipWith (==) periodicPart) (chunk (length periodicPart) xs)) $ tail $ inits xs
 
-computeZPeriod ds m = t $ take 1000 $ map (`mod` m) $ dif ds
-computeOPeriod ds m = t $ take 1000 $ map (`mod` m) $ p ds
+computePeriod xs = snd $ minimumBy (comparing fst) $ go [] xs
+    where
+        go fullList [] = [(length fullList, (fullList, []))]
+        go nonRepeat repeating@(y:ys) = (totalLen, period) : go (nonRepeat ++ [y]) ys
+            where
+                period = (nonRepeat, periodicPart)
+                totalLen = length nonRepeat + length periodicPart
+                periodicPart = t repeating
+
+computeZPeriod ds m = computePeriod $ take 1000 $ map (`mod` m) $ dif ds
+computeOPeriod ds m = computePeriod $ take 1000 $ map (`mod` m) $ p ds
 
 data Transition = Transition
     { _letter :: Int
