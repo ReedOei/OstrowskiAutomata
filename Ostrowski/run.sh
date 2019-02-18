@@ -113,6 +113,8 @@ check_true() {
     else
         print_color "red" "$fname: failed to prove true (got: '$content')"
     fi
+
+    rm temp
 }
 
 verify_replacement() {
