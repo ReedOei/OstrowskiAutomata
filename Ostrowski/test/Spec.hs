@@ -78,7 +78,7 @@ main = hspec $ do
         it "compute the length 6 period for (78 - 2*sqrt(6))/101 for 1s" $ computeOPeriod (0:1:2:1:1:cycle [1,1,1,2]) 6 `shouldBe` ([0,1,2],[3,5,2,1,3,1,4,5])
 
     describe "makeAutomata" $ do
-        it "can produce x3" $ testMakeAutomata [0,1,2] [0,1] [2] (0:repeat 2) 10000
+        it "can produce x3" $ testMakeAutomata [0,1,2] [0,1] [2] (0:repeat 2) 1000000
         it "can produce x4" $ testMakeAutomata [0,1] [0,1] [2,3] (0:2:repeat 1) 10000
         it "can produce x5" $ testMakeAutomata [0,1,2] [0,1,0,2] [3,4] (0:repeat 2) 10000
         it "can produce x6" $ testMakeAutomata [0,1,2] [0] [1,2,3,4,1,5,3,2,1,4,3,5] (0:1:2:1:1:cycle [1,1,1,2]) 10000
