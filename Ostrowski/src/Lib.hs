@@ -15,15 +15,20 @@ import System.Environment
 
 import Debug.Trace
 
-p = tail . tail . p' 0 1
-    where
-        p' a b (d:ds) = a : p' b (d*b + a) ds
+import Automata
+import Sturmian
 
-q = tail . tail . q' 1 0
-    where
-        q' a b (d:ds) = a : q' b (d*b + a) ds
-
-dif ds = zipWith (-) (q ds) $ p ds
+data StateInfo = StateInfo
+    { _zDiff :: Int
+    , _oDiff :: Int
+    , _seqNum :: Int
+    , _seqLen :: Int
+    , _isEven :: Bool
+    , _pastStart :: Bool
+    , _zMod :: Int
+    , _oMod :: Int }
+    deriving (Show, Eq)
+makeLenses ''StateInfo
 
 chunk _ [] = []
 chunk n xs =
@@ -48,53 +53,32 @@ computeZPeriod ds m = computePeriod $ take 2000 $ map (`mod` m) $ dif ds
 computeOPeriod :: [Integer] -> Integer -> ([Integer], [Integer])
 computeOPeriod ds m = computePeriod $ take 2000 $ map (`mod` m) $ p ds
 
-data Transition = Transition
-    { _letter :: Int
-    , _destState :: Int }
-    deriving (Show, Eq)
-makeLenses ''Transition
-
-data State = State
-    { _num :: Int
-    , _output :: Int
-    , _zDiff :: Int
-    , _oDiff :: Int
-    , _seqNum :: Int
-    , _seqLen :: Int
-    , _transitions :: [Transition]
-    , _isEven :: Bool
-    , _pastStart :: Bool
-    , _zMod :: Int
-    , _oMod :: Int }
-    deriving (Show, Eq)
-makeLenses ''State
-
 -- Transitions for the repeated part
+transitionDest :: State StateInfo -> Int -> Int -> Int -> State StateInfo
 transitionDest st letter n m =
-    set isEven newEven $
-    set zMod newZMod $
-    set pastStart newPastStart $
-    set seqNum newSeqNum $
-    set oMod newOMod st
+    over info (set isEven newEven .
+    set zMod newZMod .
+    set pastStart newPastStart .
+    set seqNum newSeqNum .
+    set oMod newOMod) st
     where
+        i = st^.info
         newEven
-            | st^.pastStart = st^.isEven
-            | letter == 0 = not $ st^.isEven
-            | otherwise = st^.isEven
-        newPastStart = st^.pastStart || letter /= 0
-        newSeqNum = (st^.seqNum + 1) `mod` (st^.seqLen)
-        newZMod = (letter * st^.zDiff + st^.zMod) `mod` n
-        newOMod = (letter * st^.oDiff + st^.oMod) `mod` m
+            | i^.pastStart = i^.isEven
+            | letter == 0 = not $ i^.isEven
+            | otherwise = i^.isEven
+        newPastStart = i^.pastStart || letter /= 0
+        newSeqNum = (i^.seqNum + 1) `mod` (i^.seqLen)
+        newZMod = (letter * i^.zDiff + i^.zMod) `mod` n
+        newOMod = (letter * i^.oDiff + i^.oMod) `mod` m
 
 genAutomata alphabet zPeriod oPeriod zRep oRep =
-    -- [genStartStartTrans n m alphabet (nonRepStates ++ repStates) startState] ++
     genNonRepTrans n m alphabet nonRepStates repStates ++
     genTransitions n m alphabet repStates repStates
     where
         n = genericLength zRep
         m = genericLength oRep
         (nonRepeat, repeat) = makePeriods zPeriod oPeriod
-        -- startState = genStartState (nonRepeat ++ repeat) zRep oRep
         (nonRepStates, repStates) = genStates nonRepeat repeat zRep oRep
 
 rotate :: Int -> [a] -> [a]
@@ -117,18 +101,9 @@ zipUntilRepeat minL = zipUntilRepeat' []
             | (x, y) `elem` acc && length acc >= minL = acc
             | otherwise = zipUntilRepeat' (acc ++ [(x,y)]) xs ys
 
-genStartStartTrans n m alphabet destStates state =
-    set transitions stTransitions state
-    where
-        stTransitions = map go alphabet
-        go letter = Transition letter $ newSt^.num
-            where newSt = findDest destStates $ set zMod 0 $ set oMod 0 $ transitionDest state letter n m
-
-genNonRepTrans :: Int -> Int -> [Int] -> [State] -> [State] -> [State]
+genNonRepTrans :: Int -> Int -> [Int] -> [State StateInfo] -> [State StateInfo] -> [State StateInfo]
 genNonRepTrans n m alphabet nonRepStates repStates =
-    zipWith (\st dest -> transitionsForState n m alphabet dest st) nonRepStates $ tail $ tails $ nonRepStates ++ repStates
-
--- genStartState diffs zRep oRep = State 0 0 (head diffs) [] True False 0 0
+    zipWith (flip (transitionsForState n m alphabet)) nonRepStates $ tail $ tails $ nonRepStates ++ repStates
 
 genTransitions n m alphabet destStates = map (transitionsForState n m alphabet destStates)
 
@@ -144,11 +119,13 @@ findDest states state =
         Just st -> st
 
 stateMatching st check =
-    st^.isEven == check^.isEven &&
-    st^.zMod == check^.zMod &&
-    st^.pastStart == check^.pastStart &&
-    st^.seqNum == check^.seqNum &&
-    st^.oMod == check^.oMod
+    let i = st^.info
+        ci = check^.info
+    in i^.isEven == ci^.isEven &&
+       i^.zMod == ci^.zMod &&
+       i^.pastStart == ci^.pastStart &&
+       i^.seqNum == ci^.seqNum &&
+       i^.oMod == ci^.oMod
 
 genStates nonRepeat repeat zRep oRep = (nonRepStates, repStates)
     where
@@ -167,41 +144,9 @@ genStatesWithDiffs startNum diffs zRep oRep = (zipWith go [startNum..] stateInfo
                                                                       oMod <- [0..m - 1]]
         n = genericLength zRep
         m = genericLength oRep
-        go num (seqNum, (zDiff, oDiff), isEven, pastStart, zMod, oMod) = State num out zDiff oDiff seqNum (length diffs) [] isEven pastStart zMod oMod
+        go num (seqNum, (zDiff, oDiff), isEven, pastStart, zMod, oMod) = State num out [] $ StateInfo zDiff oDiff seqNum (length diffs) isEven pastStart zMod oMod
             -- Need to shift by one here because the formula gives us the number including the current position
             where out = if isEven then zRep !! ((zMod - 1) `mod` n) else oRep !! ((oMod - 1) `mod` m)
-
-rep :: [Integer] -> Integer -> [Integer]
-rep reps n = rep' n $ reverse $ takeWhile (<= n) vals
-    where
-        vals = q reps
-
-        rep' _ [] = []
-        rep' x (d:ds)
-            | x >= d = let m = x `div` d
-                           newX = x - d*m
-                       in m : rep' newX ds
-            | otherwise = 0 : rep' x ds
-
-zeroEndingParity :: (Eq a, Num a) => [a] -> Bool
-zeroEndingParity = (== 0) . (`mod` 2) . genericLength . takeWhile (== 0) . reverse
-
-sturmian :: [Integer] -> [Integer]
-sturmian reps = map (go . rep reps) [1..]
-    where
-        go val = if zeroEndingParity val then 0 else 1
-
-repSturmian (rep:zRep) oRep (0:xs) = rep : repSturmian zRep oRep xs
-repSturmian zRep (rep:oRep) (1:xs) = rep : repSturmian zRep oRep xs
-
-runAutomata states input = (input, last (fst (foldl run ([], head states) input)))
-    where
-        run (out, state) c = fromJust $ do
-            t <- find (\t -> t^.letter == c) $ state^.transitions
-            st <- find (\st -> st^.num == t^.destState) states
-            pure (out ++ [st^.output], st)
-
-automataOutput states = map (snd . runAutomata states)
 
 makeAutomata alphabet zRep oRep reps = genAutomata alphabet zPeriod oPeriod zRep oRep
     where
@@ -209,19 +154,4 @@ makeAutomata alphabet zRep oRep reps = genAutomata alphabet zPeriod oPeriod zRep
         oPeriod = (map fromIntegral oNonRep, map fromIntegral oRepPart)
         (zNonRep, zRepPart) = computeZPeriod reps $ genericLength zRep
         (oNonRep, oRepPart) = computeOPeriod reps $ genericLength oRep
-
-class WalnutOutput a where
-    walnutStr :: a -> String
-
-instance WalnutOutput a => WalnutOutput [a] where
-    walnutStr = intercalate "\n" . map walnutStr
-
-instance WalnutOutput Transition where
-    walnutStr trans = show (trans^.letter) ++ " -> " ++ show (trans^.destState)
-
-instance WalnutOutput State where
-    walnutStr st = show (st^.num) ++ " " ++ show (st^.output) ++ "\n" ++
-                    walnutStr (st^.transitions)
-
-walnutOutput numSys states = numSys ++ "\n" ++ walnutStr states
 

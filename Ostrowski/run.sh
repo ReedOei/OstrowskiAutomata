@@ -14,6 +14,7 @@ c_alpha="$8"
 stack build Ostrowski
 stack exec Ostrowski "generate" "$word_name" "$num_sys" "$alphabet" "$zero_rep" "$one_rep" "$nonrep_part" "$rep_part"
 stack exec Ostrowski "proof" "$word_name" "$num_sys" "$c_alpha" "$zero_rep" "$one_rep"
+stack exec Ostrowski "c_alpha" "$num_sys" "$alphabet"
 
 iconv -f utf-8 -t utf-16be "$word_name.txt" > temp
 mv temp "$word_name.txt"

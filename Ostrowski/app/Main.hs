@@ -1,5 +1,7 @@
 module Main where
 
+import Automata
+import CAlpha
 import Lib
 import WalnutProof
 

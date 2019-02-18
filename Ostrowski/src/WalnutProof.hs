@@ -2,6 +2,7 @@ module WalnutProof where
 
 import Data.List
 
+import Automata
 import Lib
 
 data Eval = Eval String String String
