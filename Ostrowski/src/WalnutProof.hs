@@ -28,8 +28,10 @@ validReplacements x targetVars rep =
 betweenValsCorrect cAlpha [] between = ""
 betweenValsCorrect cAlpha [_] between = ""
 betweenValsCorrect cAlpha (first:vs) between =
-    let notEqual = "(" ++ intercalate " & " (map (\v -> "(i != " ++ v ++ ")") (init vs)) ++ ")"
-    in " & (Ai ((i > " ++ first ++ ") & (i < " ++ last vs ++ ") & " ++ notEqual ++
+    let notEqual
+            | not $ null $ init vs = " & (" ++ intercalate " & " (map (\v -> "(i != " ++ v ++ ")") (init vs)) ++ ")"
+            | otherwise = ""
+    in " & (Ai ((i > " ++ first ++ ") & (i < " ++ last vs ++ ")" ++ notEqual ++
        ") => (" ++ cAlpha ++ "[i] = @" ++ show between ++ "))"
 
 replaceProof numSys target between cAlpha x rep =
