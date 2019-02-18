@@ -53,7 +53,6 @@ computeZPeriod ds m = computePeriod $ take 2000 $ map (`mod` m) $ dif ds
 computeOPeriod :: [Integer] -> Integer -> ([Integer], [Integer])
 computeOPeriod ds m = computePeriod $ take 2000 $ map (`mod` m) $ p ds
 
--- Transitions for the repeated part
 transitionDest :: State StateInfo -> Int -> Int -> Int -> State StateInfo
 transitionDest st letter n m =
     over info (set isEven newEven .

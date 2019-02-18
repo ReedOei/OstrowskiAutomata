@@ -1,6 +1,7 @@
 import Test.Hspec
 
 import Automata
+import qualified CAlpha
 import Lib
 import Sturmian
 
@@ -20,6 +21,14 @@ testMakeAutomata alphabet zRep oRep reps n = compareSeqs 0 fromAutomata actual
         fromAutomata = take n $ automataOutput states $ map (map fromIntegral . reverse . rep iReps) [1..]
         actual = take n $ repSturmian (cycle zRep) (cycle oRep) $ sturmian iReps
 
+testGenCAlpha :: [Int] -> [Int] -> Int -> IO ()
+testGenCAlpha alphabet reps n = compareSeqs 0 fromAutomata actual
+    where
+        iReps = map fromIntegral reps
+        states = CAlpha.genAutomata alphabet
+        fromAutomata = take n $ automataOutput states $ map (map fromIntegral . reverse . rep iReps) [1..]
+        actual = take n $ map fromIntegral $ sturmian iReps
+
 compareSeqs _ [] [] = pure ()
 compareSeqs i (x:xs) (y:ys) = do
     putStr $ "\r" ++ show (i, x, y, x == y)
@@ -28,6 +37,16 @@ compareSeqs i (x:xs) (y:ys) = do
 
 main :: IO ()
 main = hspec $ do
+    describe "CAlpha.genAutomata" $ do
+        it "generates the sturmian word for x3"  $ testGenCAlpha [0,1,2] (0:repeat 2) 10000
+        it "generates the sturmian word for x4"  $ testGenCAlpha [0,1] (0:2:repeat 1) 10000
+        it "generates the sturmian word for x5"  $ testGenCAlpha [0,1,2] (0:repeat 2) 10000
+        it "generates the sturmian word for x6"  $ testGenCAlpha [0,1,2] (0:1:2:1:1:cycle [1,1,1,2]) 10000
+        it "generates the sturmian word for x7"  $ testGenCAlpha [0,1,2,3] (0:1:1:3:cycle [1,2,1]) 10000
+        it "generates the sturmian word for x8"  $ testGenCAlpha [0,1,2,3] (0:1:3:1:cycle [2]) 10000
+        it "generates the sturmian word for x9"  $ testGenCAlpha [0,1,2,3] (0:1:2:3:cycle [2]) 10000
+        it "generates the sturmian word for x10" $ testGenCAlpha [0,1,2,3,4] (0:1:4:2:cycle [3]) 10000
+
     describe "genAutomata" $ do
         it "replace with [2,3] and [1]" $ testAutomata [0,1,2] [2,3] [1] (0:repeat 2) ([], [1]) ([], [0]) 10000
         it "replace with [0,1] and [2]" $ testAutomata [0,1,2] [0,1] [2] (0:repeat 2) ([], [1]) ([], [0]) 10000

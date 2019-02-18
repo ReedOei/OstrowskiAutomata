@@ -1,7 +1,7 @@
 module Main where
 
 import Automata
-import CAlpha
+import qualified CAlpha
 import Lib
 import WalnutProof
 
@@ -12,6 +12,13 @@ main = do
     args <- getArgs
 
     case args of
+        ["c_alpha", wordName, numSys, alphabetStr] -> do
+            let alphabet = read alphabetStr
+
+            let states = CAlpha.genAutomata alphabet
+
+            writeFile (wordName ++ ".txt") $ walnutOutput numSys states
+
         ["proof", wordName, numSys, cAlpha, zRepStr, oRepStr] -> do
             let zRep = read zRepStr :: [Integer]
             let oRep = read oRepStr :: [Integer]
