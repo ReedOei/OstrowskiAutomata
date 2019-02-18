@@ -15,49 +15,33 @@ import System.Environment
 
 import Debug.Trace
 
-p _ (-2) = 0
-p _ (-1) = 1
-p (d:ds) n = d * p ds (n - 1) + p (tail ds) (n - 2)
+-- p _ (-2) = 0
+-- p _ (-1) = 1
+-- p (d:ds) n = d * p ds (n - 1) + p (tail ds) (n - 2)
 
-q _ (-2) = 1
-q _ (-1) = 0
-q (d:ds) n = d * q ds (n - 1) + q (tail ds) (n - 2)
+-- q _ (-2) = 1
+-- q _ (-1) = 0
+-- q (d:ds) n = d * q ds (n - 1) + q (tail ds) (n - 2)
 
-dif ds n = q ds n - p ds n
+p = tail . tail . p' 0 1
+    where
+        p' a b (d:ds) = a : p' b (d*b + a) ds
 
-repeatsEvery :: Eq a => Int -> [a] -> Bool
-repeatsEvery _      []     = True
-repeatsEvery period (x:xs) =
-    case drop (period - 1) xs of
-        []     -> True
-        (y:ys) -> x == y && repeatsEvery period ys
+q = tail . tail . q' 1 0
+    where
+        q' a b (d:ds) = a : q' b (d*b + a) ds
 
-isPeriodicWith :: Eq a => Int -> [a] -> Bool
-isPeriodicWith period = all (repeatsEvery period) . take period . tails
-
-periodic :: Eq a => [a] -> Bool
-periodic [] = False
-periodic xs = any ($ xs) $ map isPeriodicWith $ zipWith const [1..] $ tail xs
+dif ds = zipWith (-) (q ds) $ p ds
 
 chunk _ [] = []
 chunk n xs =
     let (c, rest) = splitAt n xs
     in c : chunk n rest
 
--- isPeriodic :: Eq a => [a] -> Bool
--- isPeriodic = any periodic . tails
+t xs = fromJust $ find (\periodicPart -> all (and . zipWith (==) periodicPart) (chunk (length periodicPart) xs)) $ tail $ inits xs
 
-t xs = find (\periodicPart -> all (== periodicPart) (chunk (length periodicPart) xs)) $ tail $ inits xs
-
-takeUntil f = takeUntil' f []
-    where
-        takeUntil' _ prev [] = prev
-        takeUntil' f prev (x:xs)
-            | f (prev ++ [x]) = prev ++ [x]
-            | otherwise       = takeUntil' f (prev ++ [x]) xs
-
--- computePeriod ds m = takeUntil isPeriodic $ map ((`mod` m) . dif ds) [0..]
-computePeriod ds m = map (\i -> (dif (reverse (take (i + 1) ds)) i ) `mod` m) [0..]
+computeZPeriod ds m = t $ take 1000 $ map (`mod` m) $ dif ds
+computeOPeriod ds m = t $ take 1000 $ map (`mod` m) $ p ds
 
 data Transition = Transition
     { _letter :: Int
