@@ -25,10 +25,12 @@ validReplacements x targetVars rep =
         rotateToStr vSeq valSeq = "(" ++ intercalate " & " (zipWith go vSeq valSeq) ++ ")"
         go v val = "(" ++ x ++ "[" ++ v ++ "] = @" ++ show val ++ ")"
 
-betweenValsCorrect cAlpha targetVars between =
-    "(" ++ intercalate " & " (zipWith go targetVars (tail targetVars)) ++ ")"
-    where
-        go v1 v2 = "((i > " ++ v1 ++ ") & (i < " ++ v2 ++ ")) => (" ++ cAlpha ++ "[i] = @" ++ show between ++ ")"
+betweenValsCorrect cAlpha [] between = ""
+betweenValsCorrect cAlpha [_] between = ""
+betweenValsCorrect cAlpha (first:vs) between =
+    let notEqual = "(" ++ intercalate " & " (map (\v -> "(i != " ++ v ++ ")") (init vs)) ++ ")"
+    in " & (Ai ((i > " ++ first ++ ") & (i < " ++ last vs ++ ") & " ++ notEqual ++
+       ") => (" ++ cAlpha ++ "[i] = @" ++ show between ++ "))"
 
 replaceProof numSys target between cAlpha x rep =
     let targetVars = take (length rep) vars
@@ -36,9 +38,7 @@ replaceProof numSys target between cAlpha x rep =
         constraintTargets
             | length rep > 1 = "(" ++ intercalate " & " (zipWith (\a b -> "(" ++ a ++ " < " ++ b ++ ")") targetVars (tail targetVars)) ++ ") & "
             | otherwise = ""
-        betweenIsCorrect
-            | length rep > 1 = " & (Ai (" ++ betweenValsCorrect cAlpha targetVars between ++ "))"
-            | otherwise = ""
+        betweenIsCorrect = betweenValsCorrect cAlpha targetVars between
         targetsAreExpected = intercalate " & " $ map (\v -> "(" ++ cAlpha ++ "[" ++ v ++ "] = @" ++ show target ++ ")") targetVars
     in Eval ("replace_" ++ show target ++ "_between_" ++ show between) numSys $
         forallTargetVars ++ " (" ++ constraintTargets ++
