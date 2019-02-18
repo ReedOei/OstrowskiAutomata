@@ -15,14 +15,6 @@ import System.Environment
 
 import Debug.Trace
 
--- p _ (-2) = 0
--- p _ (-1) = 1
--- p (d:ds) n = d * p ds (n - 1) + p (tail ds) (n - 2)
-
--- q _ (-2) = 1
--- q _ (-1) = 0
--- q (d:ds) n = d * q ds (n - 1) + q (tail ds) (n - 2)
-
 p = tail . tail . p' 0 1
     where
         p' a b (d:ds) = a : p' b (d*b + a) ds
@@ -93,8 +85,6 @@ transitionDest st letter n m =
         newSeqNum = (st^.seqNum + 1) `mod` (st^.seqLen)
         newZMod = (letter * st^.zDiff + st^.zMod) `mod` n
         newOMod = (letter * st^.oDiff + st^.oMod) `mod` m
-
-type Periodic = ([Int], [Int])
 
 genAutomata alphabet zPeriod oPeriod zRep oRep =
     -- [genStartStartTrans n m alphabet (nonRepStates ++ repStates) startState] ++
@@ -181,12 +171,10 @@ genStatesWithDiffs startNum diffs zRep oRep = (zipWith go [startNum..] stateInfo
             -- Need to shift by one here because the formula gives us the number including the current position
             where out = if isEven then zRep !! ((zMod - 1) `mod` n) else oRep !! ((oMod - 1) `mod` m)
 
-ostrowski vals = q vals
-
 rep :: [Integer] -> Integer -> [Integer]
 rep reps n = rep' n $ reverse $ takeWhile (<= n) vals
     where
-        vals = ostrowski reps
+        vals = q reps
 
         rep' _ [] = []
         rep' x (d:ds)
