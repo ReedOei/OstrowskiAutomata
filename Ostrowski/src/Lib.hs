@@ -38,8 +38,9 @@ chunk n xs =
     let (c, rest) = splitAt n xs
     in c : chunk n rest
 
-t xs = fromJust $ find (\periodicPart -> all (and . zipWith (==) periodicPart) (chunk (length periodicPart) xs)) $ tail $ inits xs
+t xs = fromMaybe xs $ find (\periodicPart -> all (and . zipWith (==) periodicPart) (chunk (length periodicPart) xs)) $ tail $ inits xs
 
+computePeriod :: Eq a => [a] -> ([a], [a])
 computePeriod xs = snd $ minimumBy (comparing fst) $ go [] xs
     where
         go fullList [] = [(length fullList, (fullList, []))]
@@ -49,8 +50,11 @@ computePeriod xs = snd $ minimumBy (comparing fst) $ go [] xs
                 totalLen = length nonRepeat + length periodicPart
                 periodicPart = t repeating
 
-computeZPeriod ds m = computePeriod $ take 1000 $ map (`mod` m) $ dif ds
-computeOPeriod ds m = computePeriod $ take 1000 $ map (`mod` m) $ p ds
+computeZPeriod :: [Integer] -> Integer -> ([Integer], [Integer])
+computeZPeriod ds m = computePeriod $ take 2000 $ map (`mod` m) $ dif ds
+
+computeOPeriod :: [Integer] -> Integer -> ([Integer], [Integer])
+computeOPeriod ds m = computePeriod $ take 2000 $ map (`mod` m) $ p ds
 
 data Transition = Transition
     { _letter :: Int
@@ -177,27 +181,24 @@ genStatesWithDiffs startNum diffs zRep oRep = (zipWith go [startNum..] stateInfo
             -- Need to shift by one here because the formula gives us the number including the current position
             where out = if isEven then zRep !! ((zMod - 1) `mod` n) else oRep !! ((oMod - 1) `mod` m)
 
-ostrowski :: (Eq a, Num a) => [a] -> [a]
-ostrowski vals = nub $ tail $ ostrowski' 0 1 vals
-    where
-        ostrowski' a b (v:vs) = a : ostrowski' b (b*v + a) vs
+ostrowski vals = q vals
 
-rep :: Integral a => [a] -> a -> [a]
-rep reps n = rep' n reps $ reverse $ takeWhile (<= n) vals
+rep :: [Integer] -> Integer -> [Integer]
+rep reps n = rep' n $ reverse $ takeWhile (<= n) vals
     where
         vals = ostrowski reps
 
-        rep' _ _ [] = []
-        rep' x (maxDigit:ms) (d:ds)
-            | x >= d = let m = min maxDigit $ x `div` d
+        rep' _ [] = []
+        rep' x (d:ds)
+            | x >= d = let m = x `div` d
                            newX = x - d*m
-                       in m : rep' newX ms ds
-            | otherwise = 0 : rep' x ms ds
+                       in m : rep' newX ds
+            | otherwise = 0 : rep' x ds
 
 zeroEndingParity :: (Eq a, Num a) => [a] -> Bool
 zeroEndingParity = (== 0) . (`mod` 2) . genericLength . takeWhile (== 0) . reverse
 
-sturmian :: Integral a => [a] -> [a]
+sturmian :: [Integer] -> [Integer]
 sturmian reps = map (go . rep reps) [1..]
     where
         go val = if zeroEndingParity val then 0 else 1
@@ -213,6 +214,13 @@ runAutomata states input = (input, last (fst (foldl run ([], head states) input)
             pure (out ++ [st^.output], st)
 
 automataOutput states = map (snd . runAutomata states)
+
+makeAutomata alphabet zRep oRep reps = genAutomata alphabet zPeriod oPeriod zRep oRep
+    where
+        zPeriod = (map fromIntegral zNonRep, map fromIntegral zRepPart)
+        oPeriod = (map fromIntegral oNonRep, map fromIntegral oRepPart)
+        (zNonRep, zRepPart) = computeZPeriod reps $ genericLength zRep
+        (oNonRep, oRepPart) = computeOPeriod reps $ genericLength oRep
 
 class WalnutOutput a where
     walnutStr :: a -> String
