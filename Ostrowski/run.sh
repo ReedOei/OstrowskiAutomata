@@ -150,5 +150,5 @@ mv "${word_name}_prf.txt" "$RESULTS"
 
 generate_addition_automaton "$num_sys" "$nonrep_part" "$rep_part"
 
-# verify_replacement "$RESULTS/${word_name}_prf.txt"
+verify_replacement "$RESULTS/${word_name}_prf.txt"
 
