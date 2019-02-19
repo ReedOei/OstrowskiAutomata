@@ -1,4 +1,0 @@
-# Ostrowski
-
-Main program.
-
