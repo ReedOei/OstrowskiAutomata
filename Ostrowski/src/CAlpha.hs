@@ -14,7 +14,9 @@ data StateInfo = StateInfo
     deriving (Show, Eq)
 makeLenses ''StateInfo
 
-genAutomata alphabet = genTransitions alphabet $ genStates alphabet
+genAutomata alphabet =
+    -- minimizeAutomata alphabet $ prune $
+        genTransitions alphabet $ genStates alphabet
 
 genStates alphabet = zipWith go [0..] [(isEven, pastStart) | isEven <- [True, False], pastStart <- [False, True]]
     where

@@ -9,7 +9,7 @@ testAutomata :: [Int] -> [Int] -> [Int] -> [Int] -> ([Int], [Int]) -> ([Int], [I
 testAutomata alphabet zRep oRep reps zPeriod oPeriod n = compareSeqs 0 fromAutomata actual
     where
         iReps = map fromIntegral reps
-        states = prune $ genAutomata alphabet zPeriod oPeriod zRep oRep
+        states = genAutomata alphabet zPeriod oPeriod zRep oRep
         fromAutomata = take n $ automataOutput states $ map (map fromIntegral . reverse . rep iReps) [1..]
         actual = take n $ repSturmian (cycle zRep) (cycle oRep) $ sturmian iReps
 
@@ -17,7 +17,7 @@ testMakeAutomata :: [Int] -> [Int] -> [Int] -> [Int] -> Int -> IO ()
 testMakeAutomata alphabet zRep oRep reps n = compareSeqs 0 fromAutomata actual
     where
         iReps = map fromIntegral reps
-        states = prune $ makeAutomata alphabet zRep oRep $ map fromIntegral reps
+        states = makeAutomata alphabet zRep oRep $ map fromIntegral reps
         fromAutomata = take n $ automataOutput states $ map (map fromIntegral . reverse . rep iReps) [1..]
         actual = take n $ repSturmian (cycle zRep) (cycle oRep) $ sturmian iReps
 

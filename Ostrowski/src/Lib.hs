@@ -72,6 +72,8 @@ transitionDest st letter n m =
         newOMod = (letter * i^.oDiff + i^.oMod) `mod` m
 
 genAutomata alphabet zPeriod oPeriod zRep oRep =
+    minimizeAutomata alphabet $
+    prune $
     genNonRepTrans n m alphabet nonRepStates repStates ++
     genTransitions n m alphabet repStates repStates
     where
