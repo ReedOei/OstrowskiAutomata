@@ -1,3 +1,5 @@
+import Data.List
+
 import Test.Hspec
 
 import Automata
@@ -8,18 +10,28 @@ import Sturmian
 testAutomata :: [Int] -> [Int] -> [Int] -> [Int] -> ([Int], [Int]) -> ([Int], [Int]) -> Int -> IO ()
 testAutomata alphabet zRep oRep reps zPeriod oPeriod n = compareSeqs 0 fromAutomata actual
     where
-        iReps = map fromIntegral reps
         states = genAutomata alphabet zPeriod oPeriod zRep oRep
-        fromAutomata = take n $ automataOutput states $ map (map fromIntegral . reverse . rep iReps) [1..]
-        actual = take n $ repSturmian (cycle zRep) (cycle oRep) $ sturmian iReps
+        fromAutomata = take n $ automataOutput states $ lsdReps reps
+        actual = take n $ repSturmianWord (cycle zRep) (cycle oRep) reps
 
 testMakeAutomata :: [Int] -> [Int] -> [Int] -> [Int] -> Int -> IO ()
 testMakeAutomata alphabet zRep oRep reps n = compareSeqs 0 fromAutomata actual
     where
-        iReps = map fromIntegral reps
         states = makeAutomata alphabet zRep oRep $ map fromIntegral reps
-        fromAutomata = take n $ automataOutput states $ map (map fromIntegral . reverse . rep iReps) [1..]
-        actual = take n $ repSturmian (cycle zRep) (cycle oRep) $ sturmian iReps
+        fromAutomata = take n $ automataOutput states $ lsdReps reps
+        actual = take n $ repSturmianWord (cycle zRep) (cycle oRep) reps
+
+testOutputAutomata :: [Int] -> [Int] -> [Int] -> [Int] -> Int -> IO ()
+testOutputAutomata alphabet zRep oRep reps n = mapM_ doCompare automata
+    where
+        automata = makeOutputAutomata alphabet zRep oRep $ map fromIntegral reps
+        doCompare (outputVal, states) = do
+            putStrLn $ "Checking " ++ show outputVal ++ " (" ++ show (length states) ++ " states)"
+            compareSeqs 0 fromAutomata actual
+            putStrLn ""
+            where
+                fromAutomata = take n $ automataOutput states $ lsdReps reps
+                actual = map (\x -> if x == outputVal then 1 else 0) $ take n $ repSturmianWord (cycle zRep) (cycle oRep) reps
 
 testGenCAlpha :: [Int] -> [Int] -> Int -> IO ()
 testGenCAlpha alphabet reps n = compareSeqs 0 fromAutomata actual
@@ -39,6 +51,21 @@ seqCheckLength = 100000
 
 main :: IO ()
 main = hspec $ do
+    describe "makeOutputAutomata" $ do
+        it "generates separate output automata for each of the output symbols" $ do
+            let automata = makeOutputAutomata [0,1,2,3,4] [0,1] [2,3,4,5,6,7,2,8,4,9,6,3,2,5,4,7,6,8,2,9,4,3,6,5,2,7,4,8,6,9] (0:1:4:2:cycle [3])
+
+            nub (sort (map fst automata)) `shouldMatchList` nub (sort [0,1,2,3,4,5,6,7,2,8,4,9,6,3,2,5,4,7,6,8,2,9,4,3,6,5,2,7,4,8,6,9])
+
+        it "accepts output values for x3"  $ testOutputAutomata [0,1,2] [0,1] [2] (0:repeat 2) seqCheckLength
+        it "accepts output values for x4"  $ testOutputAutomata [0,1] [0,1] [2,3] (0:2:repeat 1) seqCheckLength
+        it "accepts output values for x5"  $ testOutputAutomata [0,1,2] [0,1,0,2] [3,4] (0:repeat 2) seqCheckLength
+        it "accepts output values for x6"  $ testOutputAutomata [0,1,2] [0] [1,2,3,4,1,5,3,2,1,4,3,5] (0:1:2:1:1:cycle [1,1,1,2]) seqCheckLength
+        it "accepts output values for x7"  $ testOutputAutomata [0,1,2,3] [0,1] [2,3,4,5,2,6,4,3,2,5,4,6] (0:1:1:3:cycle [1,2,1]) seqCheckLength
+        it "accepts output values for x8"  $ testOutputAutomata [0,1,2,3] [0,1] [2,3,4,5,2,6,7,3,2,5,4,6,2,3,7,5,2,6,4,3,2,5,7,6] (0:1:3:1:cycle [2]) seqCheckLength
+        it "accepts output values for x9"  $ testOutputAutomata [0,1,2,3] [0,1] [2,3,4,5,6,7,2,8,4,3,6,5,2,7,4,8,6,3,2,5,4,7,6,8] (0:1:2:3:cycle [2]) seqCheckLength
+        it "accepts output values for x10" $ testOutputAutomata [0,1,2,3,4] [0,1] [2,3,4,5,6,7,2,8,4,9,6,3,2,5,4,7,6,8,2,9,4,3,6,5,2,7,4,8,6,9] (0:1:4:2:cycle [3]) seqCheckLength
+
     describe "CAlpha.genAutomata" $ do
         it "generates the sturmian word for x3"  $ testGenCAlpha [0,1,2] (0:repeat 2) seqCheckLength
         it "generates the sturmian word for x4"  $ testGenCAlpha [0,1] (0:2:repeat 1) seqCheckLength

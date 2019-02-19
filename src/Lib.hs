@@ -30,12 +30,14 @@ data StateInfo = StateInfo
     deriving (Show, Eq)
 makeLenses ''StateInfo
 
+chunk :: Int -> [a] -> [[a]]
 chunk _ [] = []
 chunk n xs =
     let (c, rest) = splitAt n xs
     in c : chunk n rest
 
-t xs = fromMaybe xs $ find (\periodicPart -> all (and . zipWith (==) periodicPart) (chunk (length periodicPart) xs)) $ tail $ inits xs
+periodic :: Eq a => [a] -> [a]
+periodic xs = fromMaybe xs $ find (\periodicPart -> and $ zipWith (==) (cycle periodicPart) xs) $ tail $ inits xs
 
 computePeriod :: Eq a => [a] -> ([a], [a])
 computePeriod xs = snd $ minimumBy (comparing fst) $ go [] xs
@@ -45,13 +47,13 @@ computePeriod xs = snd $ minimumBy (comparing fst) $ go [] xs
             where
                 period = (nonRepeat, periodicPart)
                 totalLen = length nonRepeat + length periodicPart
-                periodicPart = t repeating
+                periodicPart = periodic repeating
 
 computeZPeriod :: [Integer] -> Integer -> ([Integer], [Integer])
-computeZPeriod ds m = computePeriod $ take 2000 $ map (`mod` m) $ dif ds
+computeZPeriod ds m = computePeriod $ take 3000 $ map (`mod` m) $ dif ds
 
 computeOPeriod :: [Integer] -> Integer -> ([Integer], [Integer])
-computeOPeriod ds m = computePeriod $ take 2000 $ map (`mod` m) $ p ds
+computeOPeriod ds m = computePeriod $ take 3000 $ map (`mod` m) $ p ds
 
 transitionDest :: State StateInfo -> Int -> Int -> Int -> State StateInfo
 transitionDest st letter n m =
@@ -115,6 +117,7 @@ transitionsForState n m alphabet destStates state =
         go letter = Transition letter $ newSt^.num
             where newSt = findDest destStates $ transitionDest state letter n m
 
+findDest :: Foldable t => t (State StateInfo) -> State StateInfo -> State StateInfo
 findDest states state =
     case find (stateMatching state) states of
         Just st -> st
@@ -149,10 +152,16 @@ genStatesWithDiffs startNum diffs zRep oRep = (zipWith go [startNum..] stateInfo
             -- Need to shift by one here because the formula gives us the number including the current position
             where out = if isEven then zRep !! ((zMod - 1) `mod` n) else oRep !! ((oMod - 1) `mod` m)
 
+makeAutomata :: [Int] -> [Int] -> [Int] -> [Integer] -> [State StateInfo]
 makeAutomata alphabet zRep oRep reps = genAutomata alphabet zPeriod oPeriod zRep oRep
     where
         zPeriod = (map fromIntegral zNonRep, map fromIntegral zRepPart)
         oPeriod = (map fromIntegral oNonRep, map fromIntegral oRepPart)
         (zNonRep, zRepPart) = computeZPeriod reps $ genericLength zRep
         (oNonRep, oRepPart) = computeOPeriod reps $ genericLength oRep
+
+makeOutputAutomata alphabet zRep oRep reps =
+    map (\outputVal -> (outputVal, outputAutomataToAcceptAutomata outputVal states)) $ nub $ zRep ++ oRep
+    where
+        states = makeAutomata alphabet zRep oRep reps
 
