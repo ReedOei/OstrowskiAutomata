@@ -1,3 +1,7 @@
-eval replace_0_between_1 "?lsd_x3 Ax1,x2 (((x1 < x2)) & (C_x3[x1] = @0) & (C_x3[x2] = @0) & (Ai ((i > x1) & (i < x2)) => (C_x3[i] = @1))) => (((X3[x1] = @0) & (X3[x2] = @1)) | ((X3[x1] = @1) & (X3[x2] = @0)))":
+eval first_0_is_correct_X3 "?lsd_x3 ((C_x3[1] = @0) & (X3[1] = @0))":
 
-eval replace_1_between_0 "?lsd_x3 Ax1 ((C_x3[x1] = @1)) => (((X3[x1] = @2)))":
+eval first_1_is_correct_X3 "?lsd_x3 ((C_x3[2] = @1) & (X3[2] = @2))":
+
+eval replace_0_between_1_in_X3 "?lsd_x3 Ax1,x2 (((x1 < x2) & ((C_x3[x1] = @0) & (C_x3[x2] = @0)) & Ai (((i > x1) & (i < x2)) => (C_x3[i] = @1))) => (((X3[x1] = @0) & (X3[x2] = @1)) | ((X3[x1] = @1) & (X3[x2] = @0))))":
+
+eval replace_1_between_0_in_X3 "?lsd_x3 Ax1 ((C_x3[x1] = @1) => (X3[x1] = @2))":

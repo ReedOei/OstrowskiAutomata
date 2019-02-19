@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -e
+
 WALNUT_PATH="$HOME/Walnut"
 WALNUT_WORD_PATH="$WALNUT_PATH/Word Automata Library"
 WALNUT_AUTOMATA_PATH="$WALNUT_PATH/Automata Library"
@@ -15,18 +17,25 @@ run_walnut_command() {
     (
         cd "$WALNUT_PATH"
         cp "$fname" "$WALNUT_COMMAND_FILES_PATH"
-        # Need this to avoid manually pressing Ctrl+D to end the session
-        echo "" | java -cp bin Main.prover "$(basename "$fname")"
+        # Need this echo to avoid manually pressing Ctrl+D to end the session
+        echo "" | java -Xmx8g -cp bin Main.prover "$(basename "$fname")"
     )
 }
 
 encode_word() {
     name="$1"
 
-    iconv -f utf-8 -t utf-16be "$name.txt" > temp
-    rm "$name.txt"
-    mv temp "$RESULTS/$name.txt"
-    cp "$RESULTS/$name.txt" "$WALNUT_WORD_PATH"
+    iconv -f utf-8 -t utf-16be "$name" > temp
+    rm "$name"
+    mv temp "$RESULTS/$name"
+
+    if [[ "$name" =~ "_" ]]; then
+        echo "Encoded $name to $RESULTS/$name and $WALNUT_AUTOMATA_PATH"
+        cp "$RESULTS/$name" "$WALNUT_AUTOMATA_PATH"
+    else
+        echo "Encoded $name to $RESULTS/$name and $WALNUT_WORD_PATH"
+        cp "$RESULTS/$name" "$WALNUT_WORD_PATH"
+    fi
 }
 
 to_space_list() {
@@ -118,14 +127,18 @@ check_true() {
 }
 
 verify_replacement() {
-    prf="$(realpath "$1")"
+    word_name="$1"
+    prf="$(realpath "$2")"
 
     (
         cd "$WALNUT_PATH"
         cat "$prf" | java -cp bin Main.prover
 
-        check_true "$WALNUT_RESULTS_PATH/replace_1_between_0.txt"
-        check_true "$WALNUT_RESULTS_PATH/replace_0_between_1.txt"
+        for proof_name in $(cat "$prf" | cut -f2 -d" "); do
+            if [[ ! -z "$proof_name" ]]; then
+                check_true "$WALNUT_RESULTS_PATH/$proof_name.txt"
+            fi
+        done
     )
 }
 
@@ -140,15 +153,18 @@ c_alpha="$8"
 
 stack build Ostrowski
 stack exec Ostrowski "generate" "$word_name" "$num_sys" "$alphabet" "$zero_rep" "$one_rep" "$nonrep_part" "$rep_part"
-stack exec Ostrowski "proof" "$word_name" "$num_sys" "$c_alpha" "$zero_rep" "$one_rep"
+stack exec Ostrowski "generate_output" "$word_name" "$num_sys" "$alphabet" "$zero_rep" "$one_rep" "$nonrep_part" "$rep_part"
+stack exec Ostrowski "proof" "$word_name" "$num_sys" "$c_alpha" "$zero_rep" "$one_rep" "$nonrep_part" "$rep_part"
 stack exec Ostrowski "c_alpha" "$c_alpha" "$num_sys" "$alphabet"
 
-encode_word "$word_name"
-encode_word "$c_alpha"
+for fname in $(find -maxdepth 1 -name "$word_name*.txt" -not -name "*prf*" -type f); do
+    encode_word "$fname"
+done
+encode_word "$c_alpha.txt"
 
 mv "${word_name}_prf.txt" "$RESULTS"
 
 generate_addition_automaton "$num_sys" "$nonrep_part" "$rep_part"
 
-verify_replacement "$RESULTS/${word_name}_prf.txt"
+verify_replacement "$word_name" "$RESULTS/${word_name}_prf.txt"
 
