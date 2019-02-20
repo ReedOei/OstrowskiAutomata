@@ -42,8 +42,8 @@ repSturmian zRep (rep:oRep) (1:xs) = rep : repSturmian zRep oRep xs
 repSturmianWord :: (Integral a, Integral b) => [a] -> [a] -> [a] -> [b]
 repSturmianWord zRep oRep = map fromIntegral . repSturmian zRep oRep . sturmian . map fromIntegral
 
-lsdReps :: (Integral a, Integral b) => [a] -> [[b]]
-lsdReps reps = map (map fromIntegral . reverse . rep iReps) [1..]
+lsdReps :: (Integral a, Integral b) => [a] -> [[[b]]]
+lsdReps reps = map (map (:[]) . map fromIntegral . reverse . rep iReps) [1..]
     where
         iReps = map fromIntegral reps
 

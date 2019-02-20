@@ -13,7 +13,7 @@ import Data.Maybe
 import Data.Ord
 
 data Transition = Transition
-    { _letter :: Int
+    { _letter :: [Int]
     , _destState :: Int }
     deriving (Show, Eq)
 makeLenses ''Transition
@@ -32,21 +32,24 @@ replace search rep = map (\x -> if x == search then rep else x)
 stateWithNum :: [State a] -> Int -> State a
 stateWithNum states n = fromJust $ find (\st -> st^.num == n) states
 
-transition :: [State a] -> State a -> Int -> State a
-transition states state c = fromJust $ do
+alphabetOf :: [State a] -> [[Int]]
+alphabetOf = nub . concatMap (map (^.letter) . (^.transitions))
+
+transition :: [State a] -> State a -> [Int] -> Maybe (State a)
+transition states state c = do
     t <- find (\t -> t^.letter == c) $ state^.transitions
     pure $ stateWithNum states $ t^.destState
 
-runAutomata :: [State a] -> [Int] -> (([Int], Int), ([State a], State a))
+runAutomata :: [State a] -> [[Int]] -> (([[Int]], Int), ([State a], State a))
 runAutomata states input =
     let ((output, sts), finalSt) = foldl run (([], []), head states) input
     in ((input, last output), (sts, finalSt))
     where
         run ((out, stList), state) c =
-            let st = transition states state c
+            let st = fromJust $ transition states state c
             in ((out ++ [st^.output], stList ++ [st]), st)
 
-automataOutput :: [State a] -> [[Int]] -> [Int]
+automataOutput :: [State a] -> [[[Int]]] -> [Int]
 automataOutput states = map (snd . fst . runAutomata states)
 
 outputAutomataToAcceptAutomata :: Eq a => Int -> [State a] -> [State a]
@@ -98,10 +101,10 @@ untilNoChange f x
 
 -- | Finds all reachable states, given a list of inputs.
 --   Can be useful if your input language is not just Sigma*.
-optimize :: Eq a => [State a] -> [[Int]] -> [State a]
+optimize :: Eq a => [State a] -> [[[Int]]] -> [State a]
 optimize states = nub . concatMap (fst . snd . runAutomata states)
 
-minimizeAutomata :: Eq a => [Int] -> [State a] -> [State a]
+minimizeAutomata :: Eq a => [[Int]] -> [State a] -> [State a]
 minimizeAutomata alphabet states = prune $ map (renumber newNumbers) states
     where
         newNumbers = foldl Map.union Map.empty $ map newNumber finalPartitions
@@ -115,10 +118,13 @@ minimizeAutomata alphabet states = prune $ map (renumber newNumbers) states
 distinguish alphabet states partitions = sortBy (comparing (map (^.num))) $ concatMap distinguish' partitions
     where
         -- Splits the partition into (potentially) several partitions, each of which is a distinguishable group
-        distinguish' partition = map (map snd) $ groupBy ((==) `on` fst) $ sortBy (comparing fst) destStates
+        distinguish' partition = map (map fst) $ groupBy ((==) `on` snd) $ sortBy (comparing snd) destStates
         -- distinguish' partition = map (map (\(a, b) -> (a, b^.num))) $ groupBy ((==) `on` fst) $ sortBy (comparing fst) destStates
             where
-                destPartition x = ([fromJust (findIndex (st `elem`) partitions) | letter <- alphabet, let st = transition states x letter], x)
+                destPartition x = (x, [fromJust (findIndex (st `elem`) partitions) | letter <- alphabet,
+                                                                                     let maybeSt = transition states x letter,
+                                                                                     isJust maybeSt,
+                                                                                     let (Just st) = maybeSt])
                 destStates = map destPartition partition
 
 class WalnutOutput a where
@@ -128,7 +134,7 @@ instance WalnutOutput a => WalnutOutput [a] where
     walnutStr = intercalate "\n" . map walnutStr
 
 instance WalnutOutput Transition where
-    walnutStr trans = show (trans^.letter) ++ " -> " ++ show (trans^.destState)
+    walnutStr trans = intercalate " " (map show (trans^.letter)) ++ " -> " ++ show (trans^.destState)
 
 instance WalnutOutput (State a) where
     walnutStr st = show (st^.num) ++ " " ++ show (st^.output) ++ "\n" ++

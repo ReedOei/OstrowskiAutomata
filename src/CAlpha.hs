@@ -15,23 +15,23 @@ data StateInfo = StateInfo
 makeLenses ''StateInfo
 
 genAutomata alphabet =
-    -- minimizeAutomata alphabet $ prune $
-        genTransitions alphabet $ genStates alphabet
+    minimizeAutomata alphabet $ prune $
+    genTransitions alphabet $ genStates alphabet
 
 genStates alphabet = zipWith go [0..] [(isEven, pastStart) | isEven <- [True, False], pastStart <- [False, True]]
     where
         go num (isEven, pastStart) = State num (if isEven then 0 else 1) [] $ StateInfo isEven pastStart
 
-transitionDest :: State StateInfo -> Int -> State StateInfo
+transitionDest :: State StateInfo -> [Int] -> State StateInfo
 transitionDest st letter =
     over info (set isEven newEven . set pastStart newPastStart) st
     where
         i = st^.info
         newEven
             | i^.pastStart = i^.isEven
-            | letter == 0 = not $ i^.isEven
+            | letter == [0] = not $ i^.isEven
             | otherwise = i^.isEven
-        newPastStart = i^.pastStart || letter /= 0
+        newPastStart = i^.pastStart || letter /= [0]
 
 genTransitions alphabet states = map (transitionsForState alphabet states) states
 

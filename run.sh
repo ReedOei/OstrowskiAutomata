@@ -69,7 +69,9 @@ generate_addition_automaton() {
         (
             cd "$WALNUT_PATH"
             cp "$WALNUT_RESULTS_PATH/lsd_${sys}_addition.txt" "$WALNUT_CUSTOM_BASES_PATH"
+            Ostrowski minimize "$WALNUT_CUSTOM_BASES_PATH/lsd_${sys}_addition.txt"
             cp "$WALNUT_AUTOMATA_PATH/lsd_${sys}.txt" "$WALNUT_CUSTOM_BASES_PATH"
+            Ostrowski minimize "$WALNUT_CUSTOM_BASES_PATH/lsd_${sys}.txt"
         )
 
         rm "$input_file"
@@ -151,11 +153,11 @@ nonrep_part="$6"
 rep_part="$7"
 c_alpha="$8"
 
-stack build Ostrowski
-stack exec Ostrowski "generate" "$word_name" "$num_sys" "$alphabet" "$zero_rep" "$one_rep" "$nonrep_part" "$rep_part"
-stack exec Ostrowski "generate_output" "$word_name" "$num_sys" "$alphabet" "$zero_rep" "$one_rep" "$nonrep_part" "$rep_part"
-stack exec Ostrowski "proof" "$word_name" "$num_sys" "$c_alpha" "$zero_rep" "$one_rep" "$nonrep_part" "$rep_part"
-stack exec Ostrowski "c_alpha" "$c_alpha" "$num_sys" "$alphabet"
+stack install
+Ostrowski "generate" "$word_name" "$num_sys" "$alphabet" "$zero_rep" "$one_rep" "$nonrep_part" "$rep_part"
+Ostrowski "generate_output" "$word_name" "$num_sys" "$alphabet" "$zero_rep" "$one_rep" "$nonrep_part" "$rep_part"
+Ostrowski "proof" "$word_name" "$num_sys" "$c_alpha" "$zero_rep" "$one_rep" "$nonrep_part" "$rep_part"
+Ostrowski "c_alpha" "$c_alpha" "$num_sys" "$alphabet"
 
 for fname in $(find -maxdepth 1 -name "$word_name*.txt" -not -name "*prf*" -type f); do
     encode_word "$fname"
@@ -166,5 +168,5 @@ mv "${word_name}_prf.txt" "$RESULTS"
 
 generate_addition_automaton "$num_sys" "$nonrep_part" "$rep_part"
 
-verify_replacement "$word_name" "$RESULTS/${word_name}_prf.txt"
+# verify_replacement "$word_name" "$RESULTS/${word_name}_prf.txt"
 

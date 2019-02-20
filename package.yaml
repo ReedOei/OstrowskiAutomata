@@ -24,7 +24,12 @@ dependencies:
 - containers
 - lens
 - QuickCheck
+- bytestring
+- text
+- directory
 - hspec
+- parsec
+- parsec3-numbers
 
 library:
   source-dirs: src

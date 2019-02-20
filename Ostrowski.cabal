@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: fd384f4030b789b455d832d4c1726171a8fa73e519216abcd0f8776ce1fed1ea
+-- hash: 871aad70439a4afa63c0ea323b6e954bdde0588602d52382aa597be2c05b1eca
 
 name:           Ostrowski
 version:        0.1.0.0
@@ -28,6 +28,7 @@ source-repository head
 library
   exposed-modules:
       Automata
+      AutomataParser
       CAlpha
       Lib
       Sturmian
@@ -39,9 +40,14 @@ library
   build-depends:
       QuickCheck
     , base >=4.7 && <5
+    , bytestring
     , containers
+    , directory
     , hspec
     , lens
+    , parsec
+    , parsec3-numbers
+    , text
   default-language: Haskell2010
 
 executable Ostrowski
@@ -55,9 +61,14 @@ executable Ostrowski
       Ostrowski
     , QuickCheck
     , base >=4.7 && <5
+    , bytestring
     , containers
+    , directory
     , hspec
     , lens
+    , parsec
+    , parsec3-numbers
+    , text
   default-language: Haskell2010
 
 test-suite Ostrowski-test
@@ -72,7 +83,12 @@ test-suite Ostrowski-test
       Ostrowski
     , QuickCheck
     , base >=4.7 && <5
+    , bytestring
     , containers
+    , directory
     , hspec
     , lens
+    , parsec
+    , parsec3-numbers
+    , text
   default-language: Haskell2010

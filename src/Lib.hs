@@ -55,8 +55,8 @@ computeZPeriod ds m = computePeriod $ take 3000 $ map (`mod` m) $ dif ds
 computeOPeriod :: [Integer] -> Integer -> ([Integer], [Integer])
 computeOPeriod ds m = computePeriod $ take 3000 $ map (`mod` m) $ p ds
 
-transitionDest :: State StateInfo -> Int -> Int -> Int -> State StateInfo
-transitionDest st letter n m =
+transitionDest :: State StateInfo -> [Int] -> Int -> Int -> State StateInfo
+transitionDest st [letter] n m =
     over info (set isEven newEven .
     set zMod newZMod .
     set pastStart newPastStart .
@@ -73,6 +73,7 @@ transitionDest st letter n m =
         newZMod = (letter * i^.zDiff + i^.zMod) `mod` n
         newOMod = (letter * i^.oDiff + i^.oMod) `mod` m
 
+genAutomata :: [[Int]] -> ([Int], [Int]) -> ([Int], [Int]) -> [Int] -> [Int] -> [State StateInfo]
 genAutomata alphabet zPeriod oPeriod zRep oRep =
     minimizeAutomata alphabet $
     prune $
@@ -104,7 +105,7 @@ zipUntilRepeat minL = zipUntilRepeat' []
             | (x, y) `elem` acc && length acc >= minL = acc
             | otherwise = zipUntilRepeat' (acc ++ [(x,y)]) xs ys
 
-genNonRepTrans :: Int -> Int -> [Int] -> [State StateInfo] -> [State StateInfo] -> [State StateInfo]
+genNonRepTrans :: Int -> Int -> [[Int]] -> [State StateInfo] -> [State StateInfo] -> [State StateInfo]
 genNonRepTrans n m alphabet nonRepStates repStates =
     zipWith (flip (transitionsForState n m alphabet)) nonRepStates $ tail $ tails $ nonRepStates ++ repStates
 
@@ -152,7 +153,7 @@ genStatesWithDiffs startNum diffs zRep oRep = (zipWith go [startNum..] stateInfo
             -- Need to shift by one here because the formula gives us the number including the current position
             where out = if isEven then zRep !! ((zMod - 1) `mod` n) else oRep !! ((oMod - 1) `mod` m)
 
-makeAutomata :: [Int] -> [Int] -> [Int] -> [Integer] -> [State StateInfo]
+makeAutomata :: [[Int]] -> [Int] -> [Int] -> [Integer] -> [State StateInfo]
 makeAutomata alphabet zRep oRep reps = genAutomata alphabet zPeriod oPeriod zRep oRep
     where
         zPeriod = (map fromIntegral zNonRep, map fromIntegral zRepPart)

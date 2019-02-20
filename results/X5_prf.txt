@@ -2,6 +2,12 @@ eval first_0_is_correct_X5 "?lsd_x5 ((C_x5[1] = @0) & (X5[1] = @0))":
 
 eval first_1_is_correct_X5 "?lsd_x5 ((C_x5[2] = @1) & (X5[2] = @3))":
 
+eval fac_low_exponent_X5 "?lsd_x5 Ei,p,n ((p >= 1) & ((2 * n) <= (3 * p)) & Aj (((j + p) < n) => (X5[(i + j)] = X5[((i + j) + p)])))":
+
+eval fac_ex_exponent_X5 "?lsd_x5 Ei,p,n ((p >= 1) & ((2 * n) = (3 * p)) & Aj (((j + p) < n) => (X5[(i + j)] = X5[((i + j) + p)])))":
+
+eval fac_high_exponent_X5 "?lsd_x5 Ei,p,n ((p >= 1) & ((2 * n) >= (3 * p)) & Aj (((j + p) < n) => (X5[(i + j)] = X5[((i + j) + p)])))":
+
 eval replace_0_between_1_in_X5 "?lsd_x5 Ax1,x2,x3 ((((x1 < x2) & (x2 < x3)) & ((C_x5[x1] = @0) & (C_x5[x2] = @0) & (C_x5[x3] = @0)) & Ai (((i > x1) & (i < x3) & (i != x2)) => (C_x5[i] = @1))) => (((X5[x1] = @0) & (X5[x2] = @1) & (X5[x3] = @0)) | ((X5[x1] = @1) & (X5[x2] = @0) & (X5[x3] = @2)) | ((X5[x1] = @0) & (X5[x2] = @2) & (X5[x3] = @0)) | ((X5[x1] = @2) & (X5[x2] = @0) & (X5[x3] = @1))))":
 
 eval replace_1_between_0_in_X5 "?lsd_x5 Ax1,x2 (((x1 < x2) & ((C_x5[x1] = @1) & (C_x5[x2] = @1)) & Ai (((i > x1) & (i < x2)) => (C_x5[i] = @0))) => (((X5[x1] = @3) & (X5[x2] = @4)) | ((X5[x1] = @4) & (X5[x2] = @3))))":

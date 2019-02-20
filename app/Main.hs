@@ -3,10 +3,12 @@ module Main where
 import Data.List
 
 import Automata
+import AutomataParser
 import qualified CAlpha
 import Lib
 import WalnutProof
 
+import System.Directory
 import System.Environment
 
 main :: IO ()
@@ -14,6 +16,16 @@ main = do
     args <- getArgs
 
     case args of
+        ["minimize", fname] -> do
+            (numSys, states) <- parseAutomata <$> readUtf16File fname
+
+            let alphabet = alphabetOf states
+            putStrLn $ fname ++ ": Automaton originally had " ++ show (length states) ++ " states."
+            let minimized = minimizeAutomata alphabet $ states
+            putStrLn $ fname ++ ": Minimized automaton now has " ++ show (length minimized) ++ " states."
+
+            copyFile fname $ fname ++ ".bak"
+            -- writeUtf16File fname $ walnutOutput numSys minimized
         ["c_alpha", wordName, numSys, alphabetStr] -> do
             let alphabet = read alphabetStr
 
