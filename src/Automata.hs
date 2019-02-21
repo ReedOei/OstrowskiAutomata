@@ -121,10 +121,10 @@ distinguish alphabet states partitions = sortBy (comparing (map (^.num))) $ conc
         distinguish' partition = map (map fst) $ groupBy ((==) `on` snd) $ sortBy (comparing snd) destStates
         -- distinguish' partition = map (map (\(a, b) -> (a, b^.num))) $ groupBy ((==) `on` fst) $ sortBy (comparing fst) destStates
             where
-                destPartition x = (x, [fromJust (findIndex (st `elem`) partitions) | letter <- alphabet,
-                                                                                     let maybeSt = transition states x letter,
-                                                                                     isJust maybeSt,
-                                                                                     let (Just st) = maybeSt])
+                destPartition x = (x, [i | letter <- alphabet, let maybeSt = transition states x letter,
+                                           let i = if isJust maybeSt then
+                                                      fromMaybe (-1) (findIndex (fromJust maybeSt `elem`) partitions)
+                                                   else (-1)])
                 destStates = map destPartition partition
 
 class WalnutOutput a where
@@ -134,7 +134,7 @@ instance WalnutOutput a => WalnutOutput [a] where
     walnutStr = intercalate "\n" . map walnutStr
 
 instance WalnutOutput Transition where
-    walnutStr trans = intercalate " " (map show (trans^.letter)) ++ " -> " ++ show (trans^.destState)
+    walnutStr trans = unwords (map show (trans^.letter)) ++ " -> " ++ show (trans^.destState)
 
 instance WalnutOutput (State a) where
     walnutStr st = show (st^.num) ++ " " ++ show (st^.output) ++ "\n" ++
