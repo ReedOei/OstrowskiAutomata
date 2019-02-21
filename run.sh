@@ -69,9 +69,9 @@ generate_addition_automaton() {
         (
             cd "$WALNUT_PATH"
             cp "$WALNUT_RESULTS_PATH/lsd_${sys}_addition.txt" "$WALNUT_CUSTOM_BASES_PATH"
-            Ostrowski minimize "$WALNUT_CUSTOM_BASES_PATH/lsd_${sys}_addition.txt"
+            # Ostrowski minimize "$WALNUT_CUSTOM_BASES_PATH/lsd_${sys}_addition.txt"
             cp "$WALNUT_AUTOMATA_PATH/lsd_${sys}.txt" "$WALNUT_CUSTOM_BASES_PATH"
-            Ostrowski minimize "$WALNUT_CUSTOM_BASES_PATH/lsd_${sys}.txt"
+            # Ostrowski minimize "$WALNUT_CUSTOM_BASES_PATH/lsd_${sys}.txt"
         )
 
         rm "$input_file"

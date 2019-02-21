@@ -25,7 +25,7 @@ main = do
             putStrLn $ fname ++ ": Minimized automaton now has " ++ show (length minimized) ++ " states."
 
             copyFile fname $ fname ++ ".bak"
-            -- writeUtf16File fname $ walnutOutput numSys minimized
+            writeUtf16File fname $ walnutOutput numSys minimized
         ["c_alpha", wordName, numSys, alphabetStr] -> do
             let alphabet = read alphabetStr
 
