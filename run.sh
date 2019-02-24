@@ -2,23 +2,7 @@
 
 set -e
 
-source "paths.sh"
-
-encode_word() {
-    name="$1"
-
-    iconv -f utf-8 -t utf-16be "$name" > temp
-    rm "$name"
-    mv temp "$RESULTS/$name"
-
-    if [[ "$name" =~ "_" ]]; then
-        echo "Encoded $name to $RESULTS/$name and $WALNUT_AUTOMATA_PATH"
-        cp "$RESULTS/$name" "$WALNUT_AUTOMATA_PATH"
-    else
-        echo "Encoded $name to $RESULTS/$name and $WALNUT_WORD_PATH"
-        cp "$RESULTS/$name" "$WALNUT_WORD_PATH"
-    fi
-}
+source "lib.sh"
 
 verify_replacement() {
     word_name="$1"
@@ -52,9 +36,13 @@ Ostrowski "proof" "$word_name" "$num_sys" "$c_alpha" "$zero_rep" "$one_rep" "$no
 Ostrowski "c_alpha" "$c_alpha" "$num_sys" "$alphabet"
 
 for fname in $(find -maxdepth 1 -name "$word_name*.txt" -not -name "*prf*" -type f); do
-    encode_word "$fname"
+    if [[ "$fname" ~= "_" ]]; then
+        encode_word "$fname" 0
+    else
+        encode_word "$fname" 1
+    fi
 done
-encode_word "$c_alpha.txt"
+encode_word "$c_alpha.txt" 1
 
 mv "${word_name}_prf.txt" "$RESULTS"
 

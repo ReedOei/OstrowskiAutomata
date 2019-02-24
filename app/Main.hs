@@ -22,7 +22,7 @@ main = do
 
             let alphabet = alphabetOf states
             putStrLn $ fname ++ ": Automaton originally had " ++ show (length states) ++ " states."
-            let minimized = minimizeAutomata alphabet $ states
+            let minimized = minimizeAutomata alphabet states
             putStrLn $ fname ++ ": Minimized automaton now has " ++ show (length minimized) ++ " states."
 
             copyFile fname $ fname ++ ".bak"
@@ -30,6 +30,14 @@ main = do
         ["c_alpha", wordName, numSys, alphabetStr] -> do
             let alphabet = read alphabetStr
 
+            let states = CAlpha.genAutomata alphabet
+
+            writeFile (wordName ++ ".txt") $ walnutOutput numSys states
+        ["c_alpha", wordName, numSys, nonRepStr, repStr] -> do
+            -- A space list is a list like this: 0 4 1 3 1
+            -- Each symbol is assumed to be a letter of the alphabet, and so is parsed like this: [[0],[4],[1],[3],[1]]
+            let readSpaceList = map (:[]) . map read . words
+            let alphabet = sort $ nub $ readSpaceList nonRepStr ++ readSpaceList repStr
             let states = CAlpha.genAutomata alphabet
 
             writeFile (wordName ++ ".txt") $ walnutOutput numSys states

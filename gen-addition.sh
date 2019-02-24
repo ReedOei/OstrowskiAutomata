@@ -2,7 +2,7 @@
 
 set -e
 
-source "paths.sh"
+source "lib.sh"
 
 if [[ -z "$1" ]] || [[ -z "$2" ]] || [[ -z "$3" ]]; then
     echo "Usage: bash gen-addition.sh NUM_SYS_NAME NONREP REP"
@@ -11,10 +11,6 @@ if [[ -z "$1" ]] || [[ -z "$2" ]] || [[ -z "$3" ]]; then
     echo "REP          - The repeating part of the continued fraction"
     exit 1
 fi
-
-to_space_list() {
-    echo "$1" | sed -E "s/\]//g" | sed -E "s/,/ /g" | sed -E "s/\[//g"
-}
 
 sys="$(echo "$1" | sed -E "s/lsd_//g" | sed -E "s/msd_//g")"
 nonrep="$2"
@@ -38,7 +34,7 @@ rep="$3"
     done
 )
 
-bash run-walnut.sh "$GENERAL_ADDITION_AUTOMATON_PATH/output/$sys/${sys}AdditionCommand.txt"
+run_walnut "$GENERAL_ADDITION_AUTOMATON_PATH/output/$sys/${sys}AdditionCommand.txt"
 
 (
     cd "$WALNUT_PATH"

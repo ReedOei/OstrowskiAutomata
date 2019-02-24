@@ -2,7 +2,7 @@
 
 set -e
 
-source "paths.sh"
+source "lib.sh"
 
 if [[ -z "$1" ]]; then
     echo "Usage: bash try-theorems.sh THEOREMS_FILE NUM_SYS_NAME NONREP REP"
@@ -18,20 +18,25 @@ num_sys="$2"
 nonrep="$3"
 rep="$4"
 
+word_name="C_$num_sys"
+
+Ostrowski c_alpha "$word_name" "$num_sys" "$non_rep" "$rep"
+encode_word "$word_name.txt" 1
+
 bash gen-addition.sh "$num_sys" "$nonrep" "$rep"
 
 cat "$theorems_file" | grep -E "^eval" | while read thm; do
     base_prf_name="$(echo "$thm" | cut -f2 -d" ")"
     prf_name="${base_prf_name}_${num_sys}"
-    to_check="$(echo "$thm" | sed -E "s/NUM_SYS/$num_sys/g" | sed -E "s/$base_prf_name/$prf_name/g")"
+    to_check="$(echo "$thm" | sed -E "s/NUM_SYS/$num_sys/g" | sed -E "s/$base_prf_name/$prf_name/g" | sed -E "s/WORD_NAME/$word_name/g")"
 
     echo "Checking theorem: $to_check"
 
-    (
-        cd "$WALNUT_PATH"
-        echo "$to_check" | java -Xmx8g -cp "bin" Main.prover
-    )
+    # (
+    #     cd "$WALNUT_PATH"
+    #     echo "$to_check" | java -Xmx8g -cp "bin" Main.prover
+    # )
 
-    bash check-true.sh "$WALNUT_RESULTS_PATH/$prf_name.txt"
+    # bash check-true.sh "$WALNUT_RESULTS_PATH/$prf_name.txt"
 done
 
