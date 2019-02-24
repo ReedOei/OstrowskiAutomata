@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 871aad70439a4afa63c0ea323b6e954bdde0588602d52382aa597be2c05b1eca
+-- hash: b9ada3d3ded646f2472fba59b5baf3c0a255df3a27bec20c2ecf1a519f95e56f
 
 name:           Ostrowski
 version:        0.1.0.0
@@ -32,6 +32,7 @@ library
       CAlpha
       Lib
       Sturmian
+      TheoremFinder
       WalnutProof
   other-modules:
       Paths_Ostrowski
@@ -45,9 +46,11 @@ library
     , directory
     , hspec
     , lens
+    , mtl
     , parsec
     , parsec3-numbers
     , text
+    , turtle
   default-language: Haskell2010
 
 executable Ostrowski
@@ -66,9 +69,11 @@ executable Ostrowski
     , directory
     , hspec
     , lens
+    , mtl
     , parsec
     , parsec3-numbers
     , text
+    , turtle
   default-language: Haskell2010
 
 test-suite Ostrowski-test
@@ -88,7 +93,9 @@ test-suite Ostrowski-test
     , directory
     , hspec
     , lens
+    , mtl
     , parsec
     , parsec3-numbers
     , text
+    , turtle
   default-language: Haskell2010

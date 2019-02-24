@@ -119,7 +119,6 @@ distinguish alphabet states partitions = sortBy (comparing (map (^.num))) $ conc
     where
         -- Splits the partition into (potentially) several partitions, each of which is a distinguishable group
         distinguish' partition = map (map fst) $ groupBy ((==) `on` snd) $ sortBy (comparing snd) destStates
-        -- distinguish' partition = map (map (\(a, b) -> (a, b^.num))) $ groupBy ((==) `on` fst) $ sortBy (comparing fst) destStates
             where
                 destPartition x = (x, [i | letter <- alphabet, let maybeSt = transition states x letter,
                                            let i = if isJust maybeSt then

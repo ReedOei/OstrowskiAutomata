@@ -30,6 +30,8 @@ dependencies:
 - hspec
 - parsec
 - parsec3-numbers
+- turtle
+- mtl
 
 library:
   source-dirs: src

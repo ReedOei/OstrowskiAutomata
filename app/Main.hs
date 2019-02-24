@@ -6,6 +6,7 @@ import Automata
 import AutomataParser
 import qualified CAlpha
 import Lib
+import TheoremFinder
 import WalnutProof
 
 import System.Directory
