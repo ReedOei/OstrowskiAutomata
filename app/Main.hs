@@ -9,6 +9,7 @@ import Lib
 import NumerationSystem
 import TheoremFinder
 import WalnutProof
+import Util
 
 import System.Directory
 import System.Environment
@@ -21,12 +22,15 @@ main = do
         ["general", "recog", maxCharStr] -> do
             let maxChar = read maxCharStr
 
-            let fracAlphabet = "{" ++ intercalate "," (map show [1..maxChar]) ++ "}"
-            let digitAlphabet = "{" ++ intercalate "," (map show [0..maxChar]) ++ "}"
+            let alphabet = map (encode maxChar) $ concats [[1..maxChar], [0..maxChar]]
+            let alphabetStr = "{" ++ intercalate "," (map show alphabet) ++ "}"
 
             let states = generalRecogAutomata maxChar
+            let calpha = generalWord maxChar
 
-            writeUtf16File ("general_" ++ maxCharStr ++ ".txt") $ walnutOutput (fracAlphabet ++ " " ++ digitAlphabet) states
+            writeUtf16File ("general_" ++ maxCharStr ++ ".txt") $ walnutOutput alphabetStr states
+            writeUtf16File ("C_general_" ++ maxCharStr ++ ".txt") $ walnutOutput alphabetStr calpha
+
         ["minimize", fname] -> do
             (numSys, states) <- parseAutomata <$> readUtf16File fname
 
