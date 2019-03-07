@@ -18,6 +18,14 @@ makeAlphabetStr = unwords . map go
     where
         go alphabet = "{" ++ intercalate "," (map show alphabet) ++ "}"
 
+makeGeneralAutomata :: String -> Int -> [[Int]] -> (Int -> [State a]) -> IO [State a]
+makeGeneralAutomata name maxChar alphabet gen = do
+    let states = gen maxChar
+    let alphabetStr = makeAlphabetStr alphabet
+    writeUtf16File ("general_" ++ name ++ "_" ++ show maxChar ++ ".txt") $ walnutOutput alphabetStr states
+
+    pure states
+
 main :: IO ()
 main = do
     args <- getArgs
@@ -28,40 +36,29 @@ main = do
             (numSys, states) <- parseAutomata <$> readUtf16File fname
 
             print $ head $ automataOutput states [input]
-
-        ["general", "recog", maxCharStr] -> do
-            let maxChar = read maxCharStr
-
-            let fracAlphabet = makeAlphabetStr [[1..maxChar]]
-            let digitAlphabet = makeAlphabetStr [[0..maxChar]]
-
-            let states = generalRecogAutomata maxChar
-
-            writeUtf16File ("general_" ++ maxCharStr ++ ".txt") $ walnutOutput (fracAlphabet ++ " " ++ digitAlphabet) states
-
-            let calpha = CAlpha.genAutomata $ map (:[]) [0..maxChar]
-            writeUtf16File ("C_general_" ++ maxCharStr ++ ".txt") $ walnutOutput digitAlphabet calpha
-
-        ["general", "add", maxCharStr] -> do
+        ["general", maxCharStr] -> do
             let maxChar = read maxCharStr
 
             let fracAlphabet = [1..maxChar]
             let sumAlphabet = [0..maxChar + maxChar]
             let digitAlphabet = [0..maxChar]
-            let alg0Alphabet = makeAlphabetStr [digitAlphabet, digitAlphabet, sumAlphabet]
-            let alg1Alphabet = makeAlphabetStr [fracAlphabet, sumAlphabet, digitAlphabet]
-            let alg2Alphabet = makeAlphabetStr [fracAlphabet, digitAlphabet, digitAlphabet]
-            let alg3Alphabet = makeAlphabetStr [fracAlphabet, digitAlphabet, digitAlphabet]
 
-            let alg0 = alg0Automaton maxChar
-            let alg1 = alg1Automaton maxChar
-            let alg2 = alg2Automaton maxChar
-            let alg3 = alg3Automaton maxChar
+            makeGeneralAutomata "recog" maxChar [fracAlphabet, digitAlphabet] generalRecogAutomata
+            makeGeneralAutomata "lt_temp" maxChar [digitAlphabet, digitAlphabet] generalLt
+            makeGeneralAutomata "eq" maxChar [digitAlphabet, digitAlphabet] generalEq
+            makeGeneralAutomata "zero" maxChar [digitAlphabet] $ const generalZero
+            makeGeneralAutomata "one" maxChar [fracAlphabet, digitAlphabet] generalOne
+            makeGeneralAutomata "add_alg0" maxChar [digitAlphabet, digitAlphabet, sumAlphabet] alg0Automaton
+            -- makeGeneralAutomata "add_alg1" maxChar [fracAlphabet, sumAlphabet, digitAlphabet] alg1Automaton
+            makeGeneralAutomata "add_alg2" maxChar [fracAlphabet, digitAlphabet, digitAlphabet] alg2Automaton
+            makeGeneralAutomata "add_alg3" maxChar [fracAlphabet, digitAlphabet, digitAlphabet] alg3Automaton
 
-            writeUtf16File ("general_add_alg0_" ++ maxCharStr ++ ".txt") $ walnutOutput alg0Alphabet alg0
-            -- writeUtf16File ("general_add_alg1_" ++ maxCharStr ++ ".txt") $ walnutOutput alg1Alphabet alg1
-            writeUtf16File ("general_add_alg2_" ++ maxCharStr ++ ".txt") $ walnutOutput alg2Alphabet alg2
-            writeUtf16File ("general_add_alg3_" ++ maxCharStr ++ ".txt") $ walnutOutput alg3Alphabet alg3
+            let prfs = map ($ maxChar) [addAutomatonPrf, generalLtDef, generalLte, addCorrectBase, successorDef, addCorrect]
+
+            writeFile ("general_" ++ maxCharStr ++ "_prfs.txt") $ intercalate "\n\n" $ map walnutStr prfs
+
+            let calpha = CAlpha.genAutomata $ map (:[]) [0..maxChar]
+            writeUtf16File ("C_general_" ++ maxCharStr ++ ".txt") $ walnutOutput (makeAlphabetStr [digitAlphabet]) calpha
 
         ["minimize", fname] -> do
             (numSys, states) <- parseAutomata <$> readUtf16File fname

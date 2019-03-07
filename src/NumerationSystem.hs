@@ -209,10 +209,65 @@ alg3Dest state [u3, v3, w3]
     | v1 < u1 && v2 == u2 && v3 > 0 =
         if v1+1 == w1 then Just $ Alg23Info (u2,u3) (0,v3-1) (w2,w3)
         else Nothing
-    | v1 == v2 = Just $ Alg23Info (u2,u3) (v2,v3) (w2,w3)
+    | v1 == w1 = Just $ Alg23Info (u2,u3) (v2,v3) (w2,w3)
     | otherwise = Nothing
     where
         (u1,u2) = state^.info.uAlg23
         (v1,v2) = state^.info.vAlg23
         (w1,w2) = state^.info.wAlg23
+
+-- | This automaton takes the two numbers (CHECK THEY ARE BOTH VALID FIRST), and accepts if the
+-- | First number is less than the second.
+generalLt :: Int -> [State Bool]
+generalLt maxChar = minimizeAutomata alphabet $ prune withTransitions
+    where
+        digitAlphabet = [0..maxChar]
+        alphabet = concats [digitAlphabet, digitAlphabet]
+        withTransitions = makeTransitionsBy alphabet (^.info) generalLtDest generalLtStates
+
+generalLtStates :: [State Bool]
+generalLtStates = [State 0 0 [] False, State 1 1 [] True]
+
+generalLtDest :: State Bool -> [Int] -> Maybe Bool
+generalLtDest state [x1, y1]
+    | state^.info = Just True -- If we already found this number to be less than it, then we're done
+    | x1 < y1 = Just True
+    | x1 == y1 = Just False
+    | otherwise = Nothing -- If x1 > y1, then x > y
+
+generalEq :: Int -> [State ()]
+generalEq maxChar = withTransitions
+    where
+        digitAlphabet = [0..maxChar]
+        alphabet = concats [digitAlphabet, digitAlphabet]
+        withTransitions = makeTransitionsBy alphabet (^.info) dest [State 0 1 [] ()]
+        dest _ [x,y]
+            | x == y = Just ()
+            | otherwise = Nothing
+
+generalOne :: Int -> [State (Int, Bool)]
+generalOne maxChar = minimizeAutomata alphabet $ prune withTransitions
+    where
+        fracAlphabet = [1..maxChar]
+        digitAlphabet = [0..maxChar]
+        alphabet = concats [fracAlphabet, digitAlphabet]
+        withTransitions = makeTransitionsBy alphabet (^.info) generalOneDest states
+        initial = State 0 0 [] (0,False)
+        states = initial : zipWith go [1..] [(prev, done) | prev <- fracAlphabet, done <- [False, True]]
+        go num (prev, done) = State num (if done then 1 else 0) [] (prev, done)
+
+generalOneDest :: State (Int, Bool) -> [Int] -> Maybe (Int, Bool)
+generalOneDest state [frac, digit]
+    | done =
+        -- All digits after the first 1 must be 0
+        if digit == 0 then Just (prev, done)
+        else Nothing
+    | frac > 1 && digit == 1 && state^.num == 0 = Just (frac, True)
+    | frac == 1 && digit == 0 && state^.num == 0 = Just (frac, False)
+    | prev == 1 && digit == 1 = Just (frac, True)
+    | otherwise = Nothing
+    where (prev, done) = state^.info
+
+generalZero :: [State ()]
+generalZero = [State 0 1 [Transition [0] 0] ()]
 
