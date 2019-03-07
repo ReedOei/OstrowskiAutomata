@@ -35,38 +35,39 @@ stateWithNum states n = fromJust $ find (\st -> st^.num == n) states
 alphabetOf :: [State a] -> [[Int]]
 alphabetOf = nub . concatMap (map (^.letter) . (^.transitions))
 
-makeTransitionsBy :: [[Int]] ->
-                     (State a -> State a -> Bool) ->  -- Function to check if two states are equal
-                     (State a -> [Int] -> Maybe (State a)) -> -- Generate the destination state
+makeTransitionsBy :: Ord b =>
+                     [[Int]] ->
+                     (State a -> b) -> -- Function that converts states into information type (to create state map)
+                     (State a -> [Int] -> Maybe b) -> -- Generate the destination state
                      [State a] ->  -- Input states
                      [State a] -- States with transitions
-makeTransitionsBy alphabet eq dest states = map makeTransition states
+makeTransitionsBy alphabet keyMapper dest states = map makeTransition states
     where
+        stateMap = Map.fromList $ map (\s -> (keyMapper s, s)) states
         makeTransition state = set transitions newTrans state
             where
-                newTrans = [ Transition symbol $ (fromJust fullState)^.num | symbol <- alphabet,
-                                  let destStateM = dest state symbol,
-                                  isJust destStateM, let (Just destState) = destStateM,
-                                  let fullState = find (eq destState) states,
-                                  isJust fullState ]
+                newTrans = [ Transition symbol $ fullState^.num | symbol <- alphabet,
+                                  fullState <- maybeToList $ dest state symbol >>= (`Map.lookup` stateMap) ]
 
--- Simpler variant for when you just want equality for output/info (must define equality for state info type)
-makeTransitions alphabet = makeTransitionsBy alphabet compState
+-- Simpler variant for when you just want equality for output/info (must define ordering for state info type)
+makeTransitions alphabet = makeTransitionsBy alphabet keyMapper
     where
-        compState a b = a^.output == b^.output && a^.info == b^.info
+        keyMapper state = (state^.output, state^.info)
 
-transition :: [State a] -> State a -> [Int] -> Maybe (State a)
-transition states state c = do
+transition :: Map Int (State a) -> State a -> [Int] -> Maybe (State a)
+transition stateMap state c = do
     t <- find (\t -> t^.letter == c) $ state^.transitions
-    pure $ stateWithNum states $ t^.destState
+    Map.lookup (t^.destState) stateMap
 
 runAutomata :: [State a] -> [[Int]] -> (([[Int]], Int), ([State a], State a))
 runAutomata states input =
     let ((output, sts), finalSt) = foldl run (([], []), head states) input
     in ((input, last output), (sts, finalSt))
     where
+        stateMap = Map.fromList $ map (\state -> (state^.num, state)) states
+
         run ((out, stList), state) c =
-            let st = fromJust $ transition states state c
+            let st = fromJust $ transition stateMap state c
             in ((out ++ [st^.output], stList ++ [st]), st)
 
 automataOutput :: [State a] -> [[[Int]]] -> [Int]
@@ -84,10 +85,14 @@ outputAutomataToAcceptAutomata acceptedOutput states =
 reachableStates :: [State a] -> [State a]
 reachableStates states@(state:_) = reachableStates' [] [state]
     where
-        reachableStates' seen [] = map (stateWithNum states) $ sort seen
+        stateMap = Map.fromList $ map (\state -> (state^.num, state)) states
+
+        findState n = maybeToList $ Map.lookup n stateMap
+
+        reachableStates' seen [] = concatMap findState $ sort seen
         reachableStates' seen (st:sts)
             | st^.num `elem` seen = reachableStates' seen sts
-            | otherwise = reachableStates' (st^.num:seen) $ sts ++ map (stateWithNum states . (^.destState)) (st^.transitions)
+            | otherwise = reachableStates' (st^.num:seen) $ concatMap (findState . (^.destState)) (st^.transitions) ++ sts
 
 unreachableStates :: Eq a => [State a] -> [State a]
 unreachableStates states = states \\ reachableStates states
@@ -127,20 +132,21 @@ optimize states = nub . concatMap (fst . snd . runAutomata states)
 minimizeAutomata :: Eq a => [[Int]] -> [State a] -> [State a]
 minimizeAutomata alphabet states = prune $ map (renumber newNumbers) states
     where
+        stateMap = Map.fromList $ map (\state -> (state^.num, state)) states
         newNumbers = foldl Map.union Map.empty $ map newNumber finalPartitions
         newNumber partition = Map.fromList $ zip nums $ repeat $ minimum nums
             where nums = map (^.num) partition
-        finalPartitions = untilNoChange (distinguish alphabet states) partitions
+        finalPartitions = untilNoChange (distinguish alphabet stateMap) partitions
         partitions = groupBy (\a b -> a^.output == b^.output) $ sortBy (comparing (^.output)) states
 
 -- For each letter in the alphabet, we can distinguish two different states x and y if that letter a from x goes to a state in a different partition than it does from y
 -- iterate distinguish until it stops changing.
-distinguish alphabet states partitions = sortBy (comparing (map (^.num))) $ concatMap distinguish' partitions
+distinguish alphabet stateMap partitions = sortBy (comparing (map (^.num))) $ concatMap distinguish' partitions
     where
         -- Splits the partition into (potentially) several partitions, each of which is a distinguishable group
         distinguish' partition = map (map fst) $ groupBy ((==) `on` snd) $ sortBy (comparing snd) destStates
             where
-                destPartition x = (x, [i | letter <- alphabet, let maybeSt = transition states x letter,
+                destPartition x = (x, [i | letter <- alphabet, let maybeSt = transition stateMap x letter,
                                            let i = if isJust maybeSt then
                                                       fromMaybe (-1) (findIndex (fromJust maybeSt `elem`) partitions)
                                                    else (-1)])

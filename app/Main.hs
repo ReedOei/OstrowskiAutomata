@@ -9,27 +9,59 @@ import Lib
 import NumerationSystem
 import TheoremFinder
 import WalnutProof
-import Util
 
 import System.Directory
 import System.Environment
+
+makeAlphabetStr :: [[Int]] -> String
+makeAlphabetStr = unwords . map go
+    where
+        go alphabet = "{" ++ intercalate "," (map show alphabet) ++ "}"
 
 main :: IO ()
 main = do
     args <- getArgs
 
     case args of
+        ["run", fname, inputStr] -> do
+            let input = read inputStr
+            (numSys, states) <- parseAutomata <$> readUtf16File fname
+
+            print $ head $ automataOutput states [input]
+
         ["general", "recog", maxCharStr] -> do
             let maxChar = read maxCharStr
 
-            let alphabet = map (encode maxChar) $ concats [[1..maxChar], [0..maxChar]]
-            let alphabetStr = "{" ++ intercalate "," (map show alphabet) ++ "}"
+            let fracAlphabet = makeAlphabetStr [[1..maxChar]]
+            let digitAlphabet = makeAlphabetStr [[0..maxChar]]
 
             let states = generalRecogAutomata maxChar
-            let calpha = generalWord maxChar
 
-            writeUtf16File ("general_" ++ maxCharStr ++ ".txt") $ walnutOutput alphabetStr states
-            writeUtf16File ("C_general_" ++ maxCharStr ++ ".txt") $ walnutOutput alphabetStr calpha
+            writeUtf16File ("general_" ++ maxCharStr ++ ".txt") $ walnutOutput (fracAlphabet ++ " " ++ digitAlphabet) states
+
+            let calpha = CAlpha.genAutomata $ map (:[]) [0..maxChar]
+            writeUtf16File ("C_general_" ++ maxCharStr ++ ".txt") $ walnutOutput digitAlphabet calpha
+
+        ["general", "add", maxCharStr] -> do
+            let maxChar = read maxCharStr
+
+            let fracAlphabet = [1..maxChar]
+            let sumAlphabet = [0..maxChar + maxChar]
+            let digitAlphabet = [0..maxChar]
+            let alg0Alphabet = makeAlphabetStr [digitAlphabet, digitAlphabet, sumAlphabet]
+            let alg1Alphabet = makeAlphabetStr [fracAlphabet, sumAlphabet, digitAlphabet]
+            let alg2Alphabet = makeAlphabetStr [fracAlphabet, digitAlphabet, digitAlphabet]
+            let alg3Alphabet = makeAlphabetStr [fracAlphabet, digitAlphabet, digitAlphabet]
+
+            let alg0 = alg0Automaton maxChar
+            let alg1 = alg1Automaton maxChar
+            let alg2 = alg2Automaton maxChar
+            let alg3 = alg3Automaton maxChar
+
+            writeUtf16File ("general_add_alg0_" ++ maxCharStr ++ ".txt") $ walnutOutput alg0Alphabet alg0
+            -- writeUtf16File ("general_add_alg1_" ++ maxCharStr ++ ".txt") $ walnutOutput alg1Alphabet alg1
+            writeUtf16File ("general_add_alg2_" ++ maxCharStr ++ ".txt") $ walnutOutput alg2Alphabet alg2
+            writeUtf16File ("general_add_alg3_" ++ maxCharStr ++ ".txt") $ walnutOutput alg3Alphabet alg3
 
         ["minimize", fname] -> do
             (numSys, states) <- parseAutomata <$> readUtf16File fname
