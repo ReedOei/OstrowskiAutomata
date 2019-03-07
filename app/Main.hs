@@ -6,6 +6,7 @@ import Automata
 import AutomataParser
 import qualified CAlpha
 import Lib
+import NumerationSystem
 import TheoremFinder
 import WalnutProof
 
@@ -17,6 +18,15 @@ main = do
     args <- getArgs
 
     case args of
+        ["general", "recog", maxCharStr] -> do
+            let maxChar = read maxCharStr
+
+            let fracAlphabet = "{" ++ intercalate "," (map show [1..maxChar]) ++ "}"
+            let digitAlphabet = "{" ++ intercalate "," (map show [0..maxChar]) ++ "}"
+
+            let states = generalRecogAutomata maxChar
+
+            writeUtf16File ("general_" ++ maxCharStr ++ ".txt") $ walnutOutput (fracAlphabet ++ " " ++ digitAlphabet) states
         ["minimize", fname] -> do
             (numSys, states) <- parseAutomata <$> readUtf16File fname
 

@@ -30,10 +30,18 @@ rep reps n = rep' n $ reverse $ takeWhile (<= n) vals
 zeroEndingParity :: (Eq a, Num a) => [a] -> Bool
 zeroEndingParity = (== 0) . (`mod` 2) . genericLength . takeWhile (== 0) . reverse
 
-sturmian :: [Integer] -> [Integer]
-sturmian reps = map (go . rep reps) [1..]
+sturmianOffset :: Integer -> [Integer] -> [Integer]
+sturmianOffset offset reps = map (go . rep reps) [offset..]
     where
         go val = if zeroEndingParity val then 0 else 1
+
+sturmian = sturmianOffset 1
+
+runs [] = []
+runs (x:xs) = (x:run) : runs rest
+    where
+        run = takeWhile (== x) xs
+        rest = dropWhile (== x) xs
 
 repSturmian :: (Eq a, Num a) => [b] -> [b] -> [a] -> [b]
 repSturmian (rep:zRep) oRep (0:xs) = rep : repSturmian zRep oRep xs

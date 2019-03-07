@@ -35,6 +35,26 @@ stateWithNum states n = fromJust $ find (\st -> st^.num == n) states
 alphabetOf :: [State a] -> [[Int]]
 alphabetOf = nub . concatMap (map (^.letter) . (^.transitions))
 
+makeTransitionsBy :: [[Int]] ->
+                     (State a -> State a -> Bool) ->  -- Function to check if two states are equal
+                     (State a -> [Int] -> Maybe (State a)) -> -- Generate the destination state
+                     [State a] ->  -- Input states
+                     [State a] -- States with transitions
+makeTransitionsBy alphabet eq dest states = map makeTransition states
+    where
+        makeTransition state = set transitions newTrans state
+            where
+                newTrans = [ Transition symbol $ (fromJust fullState)^.num | symbol <- alphabet,
+                                  let destStateM = dest state symbol,
+                                  isJust destStateM, let (Just destState) = destStateM,
+                                  let fullState = find (eq destState) states,
+                                  isJust fullState ]
+
+-- Simpler variant for when you just want equality for output/info (must define equality for state info type)
+makeTransitions alphabet = makeTransitionsBy alphabet compState
+    where
+        compState a b = a^.output == b^.output && a^.info == b^.info
+
 transition :: [State a] -> State a -> [Int] -> Maybe (State a)
 transition states state c = do
     t <- find (\t -> t^.letter == c) $ state^.transitions
