@@ -143,8 +143,8 @@ distinguish alphabet partitions = concatMap distinguish' partitions
     where
         partitionMap = Map.fromList $ concat $ zipWith (\i states -> map (\s -> (s^.num,i)) states) [0..] partitions
 
-        alphabetLen = length $ concat alphabet
-        encode = foldl (\a b -> alphabetLen * a + b) 0
+        alphabetLen = fromIntegral $ length $ concat alphabet
+        encode = foldl (\a b -> alphabetLen * a + b) 0 . map (toInteger . fromIntegral)
 
         doLookup maybeNum = fromMaybe (-1) $ do
             num <- maybeNum

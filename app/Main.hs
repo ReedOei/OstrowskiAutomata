@@ -44,7 +44,7 @@ main = do
             let maxChar = read maxCharStr
 
             let fracAlphabet = [1..maxChar]
-            let sumAlphabet = [0..maxChar + maxChar + maxChar]
+            let sumAlphabet = [0..maxChar + maxChar + 1]
             let digitAlphabet = [0..maxChar]
 
             makeGeneralAutomata "recog" maxChar [fracAlphabet, digitAlphabet] generalRecogAutomata
