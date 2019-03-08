@@ -17,16 +17,16 @@ stack install
 # stack exec -- Ostrowski general "$max_dig"
 Ostrowski general "$max_dig" # +RTS -h -p
 
-mv "general_recog_$max_dig.txt" "$WALNUT_AUTOMATA_PATH"
-mv "general_lt_temp_$max_dig.txt" "$WALNUT_AUTOMATA_PATH"
-mv "general_eq_$max_dig.txt" "$WALNUT_AUTOMATA_PATH"
-mv "general_zero_$max_dig.txt" "$WALNUT_AUTOMATA_PATH"
-mv "general_one_$max_dig.txt" "$WALNUT_AUTOMATA_PATH"
-mv "general_add_alg0_$max_dig.txt" "$WALNUT_AUTOMATA_PATH"
-mv "general_add_alg1_$max_dig.txt" "$WALNUT_AUTOMATA_PATH"
-mv "general_add_alg2_$max_dig.txt" "$WALNUT_AUTOMATA_PATH"
-mv "general_add_alg3_$max_dig.txt" "$WALNUT_AUTOMATA_PATH"
-mv "C_general_$max_dig.txt" "$WALNUT_WORD_PATH"
+mv "recog_$max_dig.txt" "$WALNUT_AUTOMATA_PATH"
+mv "lt_temp_$max_dig.txt" "$WALNUT_AUTOMATA_PATH"
+mv "eq_$max_dig.txt" "$WALNUT_AUTOMATA_PATH"
+mv "zero_$max_dig.txt" "$WALNUT_AUTOMATA_PATH"
+mv "one_$max_dig.txt" "$WALNUT_AUTOMATA_PATH"
+mv "add_alg0_$max_dig.txt" "$WALNUT_AUTOMATA_PATH"
+mv "add_alg1_$max_dig.txt" "$WALNUT_AUTOMATA_PATH"
+mv "add_alg2_$max_dig.txt" "$WALNUT_AUTOMATA_PATH"
+mv "add_alg3_$max_dig.txt" "$WALNUT_AUTOMATA_PATH"
+mv "C_$max_dig.txt" "$WALNUT_WORD_PATH"
 
 prfs="$(realpath "general_${max_dig}_prfs.txt")"
 

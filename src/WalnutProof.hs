@@ -73,39 +73,49 @@ validRep base recogName n = Predicate recogName [base, n]
 
 generalLte :: Int -> Command
 generalLte maxChar =
-    let predicate name = Predicate ("general_" ++ name ++ "_" ++ show maxChar)
-    in Def ("general_lte_" ++ show maxChar) Nothing $
+    let predicate name = Predicate (name ++ "_" ++ show maxChar)
+    in Def ("lte_" ++ show maxChar) Nothing $
         Op (predicate "lt" ["x","y"]) "|" (predicate "eq" ["x","y"])
 
 addCorrectBase :: Int -> Command
 addCorrectBase maxChar =
-    let predicate name = Predicate ("general_" ++ name ++ "_" ++ show maxChar)
+    let predicate name = Predicate (name ++ "_" ++ show maxChar)
     in Eval ("base_proof_" ++ show maxChar) Nothing $
         Exists ["z"] $ Op (predicate "zero" ["z"]) "&" $ Forall ["a", "x","y"] $
             Op (Op (predicate "recog" ["a","x"]) "&" (predicate "recog" ["a","y"])) "=>" $
                 Op (predicate "eq" ["x", "y"]) "<=>" (predicate "add" ["a","x","z","y"])
 
+doubleDef :: Int -> Command
+doubleDef maxChar =
+    let predicate name = Predicate (name ++ "_" ++ show maxChar)
+    in Def ("double_" ++ show maxChar) Nothing $ ListOp "&" $ recogAll maxChar "a" ["x","y"] ++ [predicate "add" ["a","x","x","y"]]
+
+subDef :: Int -> Command
+subDef maxChar =
+    let predicate name = Predicate (name ++ "_" ++ show maxChar)
+    in Def ("sub_" ++ show maxChar) Nothing $ ListOp "&" $ recogAll maxChar "a" ["x","y","z"] ++ [predicate "add" ["a","z","y","x"]]
+
 generalLtDef :: Int -> Command
 generalLtDef maxChar =
-    let predicate name = Predicate ("general_" ++ name ++ "_" ++ show maxChar)
-    in Def ("general_lt_" ++ show maxChar) Nothing $ Reverse $ predicate "lt_temp" ["x","y"]
+    let predicate name = Predicate (name ++ "_" ++ show maxChar)
+    in Def ("lt_" ++ show maxChar) Nothing $ Reverse $ predicate "lt_temp" ["x","y"]
 
 successorDef :: Int -> Command
 successorDef maxChar =
-    let predicate name = Predicate ("general_" ++ name ++ "_" ++ show maxChar)
-    in Def ("general_successor_" ++ show maxChar) Nothing $
+    let predicate name = Predicate (name ++ "_" ++ show maxChar)
+    in Def ("successor_" ++ show maxChar) Nothing $
         ListOp "&" [predicate "recog" ["a","x"], predicate "recog" ["a","y"], predicate "lt" ["x","y"],
                     Forall ["k"] $ Op (predicate "recog" ["a","k"]) "=>" $
                         Op (predicate "lte" ["k","x"]) "|" $ Not $ predicate "lt" ["k","y"]]
 
 recogAll :: Int -> String -> [Query] -> [Query]
 recogAll maxChar a =
-    let predicate name = Predicate ("general_" ++ name ++ "_" ++ show maxChar)
+    let predicate name = Predicate (name ++ "_" ++ show maxChar)
     in map (\v -> predicate "recog" ["a",v])
 
 addCorrect :: Int -> Command
 addCorrect maxChar =
-    let predicate name = Predicate ("general_" ++ name ++ "_" ++ show maxChar)
+    let predicate name = Predicate (name ++ "_" ++ show maxChar)
     in Eval ("successor_proof_" ++ show maxChar) Nothing $
         Forall ["a","x","y","z","u","v"] $
             Op (ListOp "&" $ recogAll maxChar "a" ["x","y","z","u","v"] ++
@@ -118,13 +128,13 @@ addCorrect maxChar =
 -- | Note the values should all be in LSD form
 addAutomatonPrf :: Int -> Command
 addAutomatonPrf maxChar =
-    let recogName = "general_recog_" ++ show maxChar
+    let recogName = "recog_" ++ show maxChar
         allValid = map (validRep "a" recogName) ["x","y"]
-        alg0 = Predicate ("general_add_alg0_" ++ show maxChar) ["x","y","w"]
-        alg1 = Predicate ("general_add_alg1_" ++ show maxChar) ["a","w","r"]
-        alg2 = Predicate ("general_add_alg2_" ++ show maxChar) ["a","r","s"]
-        alg3 = Predicate ("general_add_alg3_" ++ show maxChar) ["a","s","z"]
-    in Def ("general_add_" ++ show maxChar) Nothing $
+        alg0 = Predicate ("add_alg0_" ++ show maxChar) ["x","y","w"]
+        alg1 = Predicate ("add_alg1_" ++ show maxChar) ["a","w","r"]
+        alg2 = Predicate ("add_alg2_" ++ show maxChar) ["a","r","s"]
+        alg3 = Predicate ("add_alg3_" ++ show maxChar) ["a","s","z"]
+    in Def ("add_" ++ show maxChar) Nothing $
         Exists ["w", "r", "s"] $ ListOp "&" $ allValid ++ [alg0, Reverse alg1, alg2, Reverse alg3]
 
 takeOneOfEach _ [] = []

@@ -23,7 +23,7 @@ makeGeneralAutomata name maxChar alphabet gen = do
     let states = gen maxChar
     let alphabetStr = makeAlphabetStr alphabet
 
-    let fname = "general_" ++ name ++ "_" ++ show maxChar ++ ".txt"
+    let fname = name ++ "_" ++ show maxChar ++ ".txt"
     putStrLn $ "Generated (" ++ show (length states) ++ " states): " ++ fname
 
     writeUtf16File fname $ walnutOutput alphabetStr states
@@ -57,12 +57,12 @@ main = do
             makeGeneralAutomata "add_alg2" maxChar [fracAlphabet, digitAlphabet, digitAlphabet] alg2Automaton
             makeGeneralAutomata "add_alg3" maxChar [fracAlphabet, digitAlphabet, digitAlphabet] alg3Automaton
 
-            let prfs = map ($ maxChar) [addAutomatonPrf, generalLtDef, generalLte, addCorrectBase, successorDef, addCorrect]
+            let prfs = map ($ maxChar) [addAutomatonPrf, generalLtDef, generalLte, doubleDef, subDef, addCorrectBase, successorDef, addCorrect]
 
             writeFile ("general_" ++ maxCharStr ++ "_prfs.txt") $ intercalate "\n\n" $ map walnutStr prfs
 
             let calpha = CAlpha.genAutomata $ map (:[]) [0..maxChar]
-            writeUtf16File ("C_general_" ++ maxCharStr ++ ".txt") $ walnutOutput (makeAlphabetStr [digitAlphabet]) calpha
+            writeUtf16File ("C_" ++ maxCharStr ++ ".txt") $ walnutOutput (makeAlphabetStr [digitAlphabet]) calpha
 
         ["inputs", fname, targetOutputStr] -> do
             (numSys, states) <- parseAutomata <$> readUtf16File fname
