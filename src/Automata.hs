@@ -156,6 +156,24 @@ distinguish alphabet partitions = concatMap distinguish' partitions
                 destPartition x = (x, encode $ map (doLookup . transitionNum x) alphabet)
                 destStates = map destPartition partition
 
+-- | Lists all inputs that give the specified output in the automata given
+findInputs :: Int -> [State a] -> [[[Int]]]
+findInputs targetOutput states@(start:_) = search Set.empty [([], start)]
+    where
+        stateMap = Map.fromList $ map (\state -> (state^.num, state)) states
+
+        findState n = maybeToList $ Map.lookup n stateMap
+
+        search _ [] = []
+        search seen ((path,st):sts)
+            | Set.member (st^.num) seen = search seen sts
+            | st^.output == targetOutput = path : search newSeen newSts
+            | otherwise = search newSeen newSts
+            where
+                newSeen = Set.insert (st^.num) seen
+                newStates = concatMap (\(symbol,dest) -> map (path ++ [symbol],) $ findState dest) $ Map.toList $ st^.transitions
+                newSts = sts ++ newStates
+
 class WalnutOutput a where
     walnutStr :: a -> String
 

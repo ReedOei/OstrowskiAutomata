@@ -44,7 +44,7 @@ main = do
             let maxChar = read maxCharStr
 
             let fracAlphabet = [1..maxChar]
-            let sumAlphabet = [0..maxChar + maxChar]
+            let sumAlphabet = [0..maxChar + maxChar + 1]
             let digitAlphabet = [0..maxChar]
 
             makeGeneralAutomata "recog" maxChar [fracAlphabet, digitAlphabet] generalRecogAutomata
@@ -63,6 +63,12 @@ main = do
 
             let calpha = CAlpha.genAutomata $ map (:[]) [0..maxChar]
             writeUtf16File ("C_general_" ++ maxCharStr ++ ".txt") $ walnutOutput (makeAlphabetStr [digitAlphabet]) calpha
+
+        ["inputs", fname, targetOutputStr] -> do
+            (numSys, states) <- parseAutomata <$> readUtf16File fname
+
+            let targetOutput = read targetOutputStr
+            mapM_ print $ findInputs targetOutput states
 
         ["minimize", fname] -> do
             (numSys, states) <- parseAutomata <$> readUtf16File fname

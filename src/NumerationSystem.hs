@@ -13,17 +13,14 @@ import Automata
 import Util
 
 data RecogInfo = RecogInfo
-    { _isFirst :: Int
-    , _frac :: Int
-    , _prev :: Int
-    , _cur :: Int }
+    { _prev :: Int}
     deriving (Show, Eq, Ord)
 makeLenses ''RecogInfo
 
 generalRecogAutomata :: Int -> [State RecogInfo]
 generalRecogAutomata maxChar = minimizeAutomata alphabet $ prune withTransitions
     where
-        withTransitions = makeTransitions alphabet recogDest states
+        withTransitions = makeTransitionsBy alphabet (^.info) recogDest states
         states = generalRecogStates maxChar
         fracAlphabet = [1..maxChar]
         digitAlphabet = [0..maxChar]
@@ -32,27 +29,24 @@ generalRecogAutomata maxChar = minimizeAutomata alphabet $ prune withTransitions
 generalRecogStates :: Int -> [State RecogInfo]
 generalRecogStates maxChar = initial : zipWith go [1..] stateVals
     where
-        initial = State 0 1 Map.empty $ RecogInfo 1 0 0 0
+        initial = State 0 1 Map.empty $ RecogInfo (-1)
         fracAlphabet = [1..maxChar]
         digitAlphabet = [0..maxChar]
-        stateVals = concats $ [[0, 1], fracAlphabet] ++ replicate 2 digitAlphabet
-        go num l@[isFirst, frac, prev, cur] = State num (isRecog l) Map.empty $ RecogInfo isFirst frac prev cur
+        stateVals = concats [digitAlphabet]
+        go num [prev] = State num 1 Map.empty $ RecogInfo prev
 
-isRecog :: [Int] -> Int
-isRecog [isFirst, frac, prev, cur]
-    | isFirst == 1 = if cur < frac then 1 else 0
-    | otherwise = if cur < frac || (cur == frac && prev == 0) then 1 else 0
-
-recogDest :: State RecogInfo -> [Int] -> Maybe (Int, RecogInfo)
+recogDest :: State RecogInfo -> [Int] -> Maybe RecogInfo
 recogDest state [nextFrac, nextDigit]
-    | state^.output > 0 = Just $ (state^.output, RecogInfo 0 nextFrac (state^.info.cur) nextDigit)
+    -- Any continued fraction starting with 1 is not allowed to have a 1 in the first place
+    | state^.num == 0 && nextDigit >= nextFrac = Nothing -- First digit must be strictly less than the fraction
+    | nextDigit < nextFrac || (nextDigit == nextFrac && state^.info.prev == 0) = Just $ RecogInfo nextDigit
     | otherwise = Nothing
 
 alg0Automaton :: Int -> [State ()]
 alg0Automaton maxChar = minimizeAutomata alphabet $ prune withTransitions
     where
         digitAlphabet = [0..maxChar]
-        sumAlphabet = [0..maxChar + maxChar]
+        sumAlphabet = [0..maxChar + maxChar + 1]
         alphabet = concats [digitAlphabet, digitAlphabet, sumAlphabet]
         withTransitions = makeTransitions alphabet alg0Dest alg0States
 
@@ -78,7 +72,9 @@ alg1Automaton :: Int -> [State Alg1Info]
 alg1Automaton maxChar = minimizeAutomata alphabet $ prune withTransitions
     where
         fracAlphabet = [1..maxChar]
-        sumAlphabet = [0..maxChar + maxChar] -- These symbols come from directly summing the two strings, so the range is larger
+        -- These symbols come from directly summing the two strings, so the range is larger
+        -- Additionally, we can add 1 more to any symbol during algorithm 1, so the range must be increased accordingly
+        sumAlphabet = [0..maxChar + maxChar + 1]
         digitAlphabet = [0..maxChar]
         alphabet = concats [fracAlphabet, sumAlphabet, digitAlphabet]
         withTransitions = makeTransitionsBy alphabet (^.info) alg1Dest states
@@ -90,7 +86,9 @@ alg1States maxChar = makeStates
         -- Intentionally include 0 here, even though it's not a valid input, for the initial states
         fracAlphabet = [0..maxChar]
         digitAlphabet = [0..maxChar]
-        sumAlphabet = [0..maxChar + maxChar] -- These symbols come from directly summing the two strings, so the range is larger
+        -- These symbols come from directly summing the two strings, so the range is larger
+        -- Additionally, we can add 1 more to any symbol during algorithm 1, so the range must be increased accordingly
+        sumAlphabet = [0..maxChar + maxChar + 1]
         initialInfo = Alg1Info (0,0,0) (0,0,0) (0,0,0) 0
         initialInfoList = [0,0,0,0,0,0,0,0,0,0]
         initial = State 0 (isFinalAlg1 initialInfoList) Map.empty initialInfo
@@ -119,7 +117,7 @@ isFinalAlg1 [v1, v2, v3, w1, w2, w3, u1, u2, u3, g] =
 alg1Dest :: State Alg1Info -> [Int] -> Maybe Alg1Info
 alg1Dest state [u4, v4', w4]
     | v2 < u2 && v3 > u3 && v4 == 0 && v1 == w1 = Just $ Alg1Info (u2,u3,u4) (v2+1,v3-(u3+1),u4-1) (w2,w3,w4) 1
-    | v2 < u2 && v3 >= u3 && v3 <= 2*u3 && v3 > 0 && v1 == w1 = Just $ Alg1Info (u2,u3,u4) (v2+1,v3-u3,v4-1) (w2,w3,w4) 0
+    | v2 < u2 && v3 >= u3 && v3 <= 2*u3 && v4 > 0 && v1 == w1 = Just $ Alg1Info (u2,u3,u4) (v2+1,v3-u3,v4-1) (w2,w3,w4) 0
     | v1 == w1 = Just $ Alg1Info (u2,u3,u4) (v2,v3,v4) (w2,w3,w4) 0
     | otherwise = Nothing
     where
