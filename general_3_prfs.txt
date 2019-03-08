@@ -1,0 +1,11 @@
+def general_add_3 "Ew,r,s ($general_recog_3(a,x) & $general_recog_3(a,y) & $general_add_alg0_3(x,y,w) & `($general_add_alg1_3(a,w,r)) & $general_add_alg2_3(a,r,s) & `($general_add_alg3_3(a,s,z)))":
+
+def general_lt_3 "`($general_lt_temp_3(x,y))":
+
+def general_lte_3 "($general_lt_3(x,y) | $general_eq_3(x,y))":
+
+eval base_proof_3 "Ez ($general_zero_3(z) & Aa,x,y (($general_recog_3(a,x) & $general_recog_3(a,y)) => ($general_eq_3(x,y) <=> $general_add_3(a,x,z,y))))":
+
+def general_successor_3 "($general_recog_3(a,x) & $general_recog_3(a,y) & $general_lt_3(x,y) & Ak ($general_recog_3(a,k) => ($general_lte_3(k,x) | ~($general_lt_3(k,y)))))":
+
+eval successor_proof_3 "Aa,x,y,z,u,v (($general_recog_3(a,x) & $general_recog_3(a,y) & $general_recog_3(a,z) & $general_recog_3(a,u) & $general_recog_3(a,v) & $general_successor_3(a,y,u) & $general_successor_3(a,z,v)) => ($general_add_3(a,x,y,z) <=> $general_add_3(a,x,u,v)))":
