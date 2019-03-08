@@ -1,0 +1,15 @@
+def add_2 "Ew,r,s ($recog_2(a,x) & $recog_2(a,y) & $add_alg0_2(x,y,w) & `($add_alg1_2(a,w,r)) & $add_alg2_2(a,r,s) & `($add_alg3_2(a,s,z)))":
+
+def lt_2 "`($lt_temp_2(x,y))":
+
+def lte_2 "($lt_2(x,y) | $eq_2(x,y))":
+
+def double_2 "($recog_2(a,x) & $recog_2(a,y) & $add_2(a,x,x,y))":
+
+def sub_2 "($recog_2(a,x) & $recog_2(a,y) & $recog_2(a,z) & $add_2(a,z,y,x))":
+
+eval base_proof_2 "Ez ($zero_2(z) & Aa,x,y (($recog_2(a,x) & $recog_2(a,y)) => ($eq_2(x,y) <=> $add_2(a,x,z,y))))":
+
+def successor_2 "($recog_2(a,x) & $recog_2(a,y) & $lt_2(x,y) & Ak ($recog_2(a,k) => ($lte_2(k,x) | ~($lt_2(k,y)))))":
+
+eval successor_proof_2 "Aa,x,y,z,u,v (($recog_2(a,x) & $recog_2(a,y) & $recog_2(a,z) & $recog_2(a,u) & $recog_2(a,v) & $successor_2(a,y,u) & $successor_2(a,z,v)) => ($add_2(a,x,y,z) <=> $add_2(a,x,u,v)))":
