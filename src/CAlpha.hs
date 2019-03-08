@@ -5,6 +5,8 @@ module CAlpha where
 import Control.Lens
 
 import Data.List
+import Data.Map (Map)
+import qualified Data.Map as Map
 
 import Automata
 
@@ -20,7 +22,7 @@ genAutomata alphabet =
 
 genStates alphabet = zipWith go [0..] [(isEven, pastStart) | isEven <- [True, False], pastStart <- [False, True]]
     where
-        go num (isEven, pastStart) = State num (if isEven then 0 else 1) [] $ StateInfo isEven pastStart
+        go num (isEven, pastStart) = State num (if isEven then 0 else 1) Map.empty $ StateInfo isEven pastStart
 
 transitionDest :: State StateInfo -> [Int] -> State StateInfo
 transitionDest st letter =
@@ -35,11 +37,10 @@ transitionDest st letter =
 
 genTransitions alphabet states = map (transitionsForState alphabet states) states
 
-transitionsForState alphabet destStates state =
-    set transitions stTransitions state
+transitionsForState alphabet destStates state = set transitions stTransitions state
     where
-        stTransitions = map go alphabet
-        go letter = Transition letter $ newSt^.num
+        stTransitions = Map.fromList $ map go alphabet
+        go letter = (letter, newSt^.num)
             where newSt = findDest destStates $ transitionDest state letter
 
 findDest states state =

@@ -75,7 +75,7 @@ generalLte :: Int -> Command
 generalLte maxChar =
     let predicate name = Predicate ("general_" ++ name ++ "_" ++ show maxChar)
     in Def ("general_lte_" ++ show maxChar) Nothing $
-        ListOp "&" [predicate "recog" ["a","x"], predicate "recog" ["a","y"], Op (predicate "lt" ["a","x","y"]) "|" (predicate "eq" ["x","y"])]
+        Op (predicate "lt" ["x","y"]) "|" (predicate "eq" ["x","y"])
 
 addCorrectBase :: Int -> Command
 addCorrectBase maxChar =
@@ -88,23 +88,30 @@ addCorrectBase maxChar =
 generalLtDef :: Int -> Command
 generalLtDef maxChar =
     let predicate name = Predicate ("general_" ++ name ++ "_" ++ show maxChar)
-    in Def ("general_lt_" ++ show maxChar) Nothing $
-        ListOp "&" [predicate "recog" ["a","x"], predicate "recog" ["a","y"], Reverse (predicate "lt_temp" ["x","y"])]
+    in Def ("general_lt_" ++ show maxChar) Nothing $ Reverse $ predicate "lt_temp" ["x","y"]
 
 successorDef :: Int -> Command
 successorDef maxChar =
     let predicate name = Predicate ("general_" ++ name ++ "_" ++ show maxChar)
     in Def ("general_successor_" ++ show maxChar) Nothing $
-        ListOp "&" [predicate "recog" ["a","x"], predicate "recog" ["a","y"], predicate "lt" ["a","x","y"],
-                    Forall ["k"] $ Op (predicate "lte" ["a","k","y"]) "&" $ Not $ predicate "lt" ["a","k","y"]]
+        ListOp "&" [predicate "recog" ["a","x"], predicate "recog" ["a","y"], predicate "lt" ["x","y"],
+                    Forall ["k"] $ Op (predicate "recog" ["a","k"]) "=>" $
+                        Op (predicate "lte" ["k","x"]) "|" $ Not $ predicate "lt" ["k","y"]]
+
+recogAll :: Int -> String -> [Query] -> [Query]
+recogAll maxChar a =
+    let predicate name = Predicate ("general_" ++ name ++ "_" ++ show maxChar)
+    in map (\v -> predicate "recog" ["a",v])
 
 addCorrect :: Int -> Command
 addCorrect maxChar =
     let predicate name = Predicate ("general_" ++ name ++ "_" ++ show maxChar)
     in Eval ("successor_proof_" ++ show maxChar) Nothing $
         Forall ["a","x","y","z","u","v"] $
-            Op (Op (predicate "successor" ["a","y","u"]) "&" (predicate "successor" ["a","z","v"])) "=>" $
-                Op (predicate "add" ["a","x","y","z"]) "<=>" (predicate "add" ["a","x","u","v"])
+            Op (ListOp "&" $ recogAll maxChar "a" ["x","y","z","u","v"] ++
+                             [predicate "successor" ["a","y","u"], predicate "successor" ["a","z","v"]])
+            "=>" $
+                    Op (predicate "add" ["a","x","y","z"]) "<=>" (predicate "add" ["a","x","u","v"])
 
 -- | The query to run to generate the general bounded addition automata
 -- | The resulting automata takes in a, x, y, z, and accepts when x +_a y = z.

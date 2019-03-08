@@ -22,7 +22,11 @@ makeGeneralAutomata :: String -> Int -> [[Int]] -> (Int -> [State a]) -> IO [Sta
 makeGeneralAutomata name maxChar alphabet gen = do
     let states = gen maxChar
     let alphabetStr = makeAlphabetStr alphabet
-    writeUtf16File ("general_" ++ name ++ "_" ++ show maxChar ++ ".txt") $ walnutOutput alphabetStr states
+
+    let fname = "general_" ++ name ++ "_" ++ show maxChar ++ ".txt"
+    putStrLn $ "Generated (" ++ show (length states) ++ " states): " ++ fname
+
+    writeUtf16File fname $ walnutOutput alphabetStr states
 
     pure states
 
@@ -49,7 +53,7 @@ main = do
             makeGeneralAutomata "zero" maxChar [digitAlphabet] $ const generalZero
             makeGeneralAutomata "one" maxChar [fracAlphabet, digitAlphabet] generalOne
             makeGeneralAutomata "add_alg0" maxChar [digitAlphabet, digitAlphabet, sumAlphabet] alg0Automaton
-            -- makeGeneralAutomata "add_alg1" maxChar [fracAlphabet, sumAlphabet, digitAlphabet] alg1Automaton
+            makeGeneralAutomata "add_alg1" maxChar [fracAlphabet, sumAlphabet, digitAlphabet] alg1Automaton
             makeGeneralAutomata "add_alg2" maxChar [fracAlphabet, digitAlphabet, digitAlphabet] alg2Automaton
             makeGeneralAutomata "add_alg3" maxChar [fracAlphabet, digitAlphabet, digitAlphabet] alg3Automaton
 

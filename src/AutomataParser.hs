@@ -7,6 +7,8 @@ import Control.Monad
 
 import Data.ByteString (ByteString)
 import qualified Data.ByteString as B
+import Data.Map (Map)
+import qualified Data.Map as Map
 import qualified Data.Text as T
 import Data.Text.Encoding
 
@@ -46,7 +48,7 @@ state = do
 
     pure $ State num output transitions ()
 
-transitions :: Parser [Transition]
+transitions :: Parser (Map [Int] Int)
 transitions = do
     t <- try (optionMaybe $ do
         newlines
@@ -54,8 +56,8 @@ transitions = do
         pure v) <|> (optional newlines >> pure Nothing)
 
     case t of
-        Nothing -> pure []
-        Just newTrans -> (:) <$> pure newTrans <*> transitions
+        Nothing -> pure Map.empty
+        Just newTrans -> uncurry Map.insert <$> pure newTrans <*> transitions
 
 letters :: Parser [Int]
 letters = do
@@ -66,12 +68,12 @@ letters = do
         Nothing -> pure []
         Just i  -> (:) <$> pure i <*> letters
 
-transition :: Parser Transition
+transition :: Parser ([Int], Int)
 transition = do
     letter <- letters
     symbol $ string "->"
     destState <- int
-    pure $ Transition letter destState
+    pure (letter, destState)
 
 symbol :: Stream s m Char => ParsecT s st m a -> ParsecT s st m a
 symbol parser = do

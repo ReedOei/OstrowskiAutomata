@@ -6,6 +6,8 @@ module NumerationSystem where
 import Control.Lens
 
 import Data.Function
+import Data.Map (Map)
+import qualified Data.Map as Map
 
 import Automata
 import Util
@@ -30,11 +32,11 @@ generalRecogAutomata maxChar = minimizeAutomata alphabet $ prune withTransitions
 generalRecogStates :: Int -> [State RecogInfo]
 generalRecogStates maxChar = initial : zipWith go [1..] stateVals
     where
-        initial = State 0 1 [] $ RecogInfo 1 0 0 0
+        initial = State 0 1 Map.empty $ RecogInfo 1 0 0 0
         fracAlphabet = [1..maxChar]
         digitAlphabet = [0..maxChar]
         stateVals = concats $ [[0, 1], fracAlphabet] ++ replicate 2 digitAlphabet
-        go num l@[isFirst, frac, prev, cur] = State num (isRecog l) [] $ RecogInfo isFirst frac prev cur
+        go num l@[isFirst, frac, prev, cur] = State num (isRecog l) Map.empty $ RecogInfo isFirst frac prev cur
 
 isRecog :: [Int] -> Int
 isRecog [isFirst, frac, prev, cur]
@@ -56,7 +58,7 @@ alg0Automaton maxChar = minimizeAutomata alphabet $ prune withTransitions
 
 -- This automata always has just one state, anything that would transition it to an invalid state is just excluded
 alg0States :: [State ()]
-alg0States = [State 0 1 [] ()]
+alg0States = [State 0 1 Map.empty ()]
 
 alg0Dest :: State () -> [Int] -> Maybe (Int, ())
 alg0Dest state [a, b, c]
@@ -91,11 +93,11 @@ alg1States maxChar = makeStates
         sumAlphabet = [0..maxChar + maxChar] -- These symbols come from directly summing the two strings, so the range is larger
         initialInfo = Alg1Info (0,0,0) (0,0,0) (0,0,0) 0
         initialInfoList = [0,0,0,0,0,0,0,0,0,0]
-        initial = State 0 (isFinalAlg1 initialInfoList) [] initialInfo
+        initial = State 0 (isFinalAlg1 initialInfoList) Map.empty initialInfo
         makeStates = initial : zipWith go [1..] (concats (replicate 3 sumAlphabet ++ replicate 3 digitAlphabet ++ replicate 3 fracAlphabet ++ [[0,1]]))
             where
                 go num l@[v1, v2, v3, w1, w2, w3, u1, u2, u3, g] =
-                    State num (isFinalAlg1 l) [] $ Alg1Info (u1,u2,u3) (v1,v2,v3) (w1,w2,w3) g
+                    State num (isFinalAlg1 l) Map.empty $ Alg1Info (u1,u2,u3) (v1,v2,v3) (w1,w2,w3) g
 
 isFinalAlg1 :: [Int] -> Int
 isFinalAlg1 [v1, v2, v3, w1, w2, w3, u1, u2, u3, g] =
@@ -152,11 +154,11 @@ alg2States maxChar = makeStates
         digitAlphabet = [0..maxChar]
         initialInfo = Alg23Info (0,0) (0,0) (0,0)
         initialInfoList = [0,0,0,0,0,0]
-        initial = State 0 (isFinalAlg2 initialInfoList) [] initialInfo
+        initial = State 0 (isFinalAlg2 initialInfoList) Map.empty initialInfo
         makeStates = initial : zipWith go [1..] (concats (replicate 2 digitAlphabet ++ replicate 2 digitAlphabet ++ replicate 2 fracAlphabet))
             where
                 go num l@[v1, v2, w1, w2, u1, u2] =
-                    State num (isFinalAlg2 l) [] $ Alg23Info (u1,u2) (v1,v2) (w1,w2)
+                    State num (isFinalAlg2 l) Map.empty $ Alg23Info (u1,u2) (v1,v2) (w1,w2)
 
 isFinalAlg2 :: [Int] -> Int
 isFinalAlg2 [v1, v2, w1, w2, u1, u2]
@@ -193,11 +195,11 @@ alg3States maxChar = makeStates
         digitAlphabet = [0..maxChar]
         initialInfo = Alg23Info (0,0) (0,0) (0,0)
         initialInfoList = [0,0,0,0,0,0]
-        initial = State 0 (isFinalAlg2 initialInfoList) [] initialInfo
+        initial = State 0 (isFinalAlg2 initialInfoList) Map.empty initialInfo
         makeStates = initial : zipWith go [1..] (concats (replicate 2 digitAlphabet ++ replicate 2 digitAlphabet ++ replicate 2 fracAlphabet))
             where
                 go num l@[v1, v2, w1, w2, u1, u2] =
-                    State num (isFinalAlg3 l) [] $ Alg23Info (u1,u2) (v1,v2) (w1,w2)
+                    State num (isFinalAlg3 l) Map.empty $ Alg23Info (u1,u2) (v1,v2) (w1,w2)
 
 isFinalAlg3 :: [Int] -> Int
 isFinalAlg3 [v1, v2, w1, w2, u1, u2]
@@ -226,7 +228,7 @@ generalLt maxChar = minimizeAutomata alphabet $ prune withTransitions
         withTransitions = makeTransitionsBy alphabet (^.info) generalLtDest generalLtStates
 
 generalLtStates :: [State Bool]
-generalLtStates = [State 0 0 [] False, State 1 1 [] True]
+generalLtStates = [State 0 0 Map.empty False, State 1 1 Map.empty True]
 
 generalLtDest :: State Bool -> [Int] -> Maybe Bool
 generalLtDest state [x1, y1]
@@ -240,7 +242,7 @@ generalEq maxChar = withTransitions
     where
         digitAlphabet = [0..maxChar]
         alphabet = concats [digitAlphabet, digitAlphabet]
-        withTransitions = makeTransitionsBy alphabet (^.info) dest [State 0 1 [] ()]
+        withTransitions = makeTransitionsBy alphabet (^.info) dest [State 0 1 Map.empty ()]
         dest _ [x,y]
             | x == y = Just ()
             | otherwise = Nothing
@@ -252,9 +254,9 @@ generalOne maxChar = minimizeAutomata alphabet $ prune withTransitions
         digitAlphabet = [0..maxChar]
         alphabet = concats [fracAlphabet, digitAlphabet]
         withTransitions = makeTransitionsBy alphabet (^.info) generalOneDest states
-        initial = State 0 0 [] (0,False)
+        initial = State 0 0 Map.empty (0,False)
         states = initial : zipWith go [1..] [(prev, done) | prev <- fracAlphabet, done <- [False, True]]
-        go num (prev, done) = State num (if done then 1 else 0) [] (prev, done)
+        go num (prev, done) = State num (if done then 1 else 0) Map.empty (prev, done)
 
 generalOneDest :: State (Int, Bool) -> [Int] -> Maybe (Int, Bool)
 generalOneDest state [frac, digit]
@@ -269,5 +271,5 @@ generalOneDest state [frac, digit]
     where (prev, done) = state^.info
 
 generalZero :: [State ()]
-generalZero = [State 0 1 [Transition [0] 0] ()]
+generalZero = [State 0 1 (Map.fromList [([0],0)]) ()]
 

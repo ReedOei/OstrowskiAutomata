@@ -111,11 +111,10 @@ genNonRepTrans n m alphabet nonRepStates repStates =
 
 genTransitions n m alphabet destStates = map (transitionsForState n m alphabet destStates)
 
-transitionsForState n m alphabet destStates state =
-    set transitions stTransitions state
+transitionsForState n m alphabet destStates state = set transitions stTransitions state
     where
-        stTransitions = map go alphabet
-        go letter = Transition letter $ newSt^.num
+        stTransitions = Map.fromList $ map go alphabet
+        go letter = (letter, newSt^.num)
             where newSt = findDest destStates $ transitionDest state letter n m
 
 findDest :: Foldable t => t (State StateInfo) -> State StateInfo -> State StateInfo
@@ -149,7 +148,7 @@ genStatesWithDiffs startNum diffs zRep oRep = (zipWith go [startNum..] stateInfo
                                                                       oMod <- [0..m - 1]]
         n = genericLength zRep
         m = genericLength oRep
-        go num (seqNum, (zDiff, oDiff), isEven, pastStart, zMod, oMod) = State num out [] $ StateInfo zDiff oDiff seqNum (length diffs) isEven pastStart zMod oMod
+        go num (seqNum, (zDiff, oDiff), isEven, pastStart, zMod, oMod) = State num out Map.empty $ StateInfo zDiff oDiff seqNum (length diffs) isEven pastStart zMod oMod
             -- Need to shift by one here because the formula gives us the number including the current position
             where out = if isEven then zRep !! ((zMod - 1) `mod` n) else oRep !! ((oMod - 1) `mod` m)
 
