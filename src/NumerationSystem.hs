@@ -46,7 +46,7 @@ alg0Automaton :: Int -> [State ()]
 alg0Automaton maxChar = minimizeAutomata alphabet $ prune withTransitions
     where
         digitAlphabet = [0..maxChar]
-        sumAlphabet = [0..maxChar + maxChar + 1]
+        sumAlphabet = [0..maxChar + maxChar + maxChar]
         alphabet = concats [digitAlphabet, digitAlphabet, sumAlphabet]
         withTransitions = makeTransitions alphabet alg0Dest alg0States
 
@@ -74,7 +74,7 @@ alg1Automaton maxChar = minimizeAutomata alphabet $ prune withTransitions
         fracAlphabet = [1..maxChar]
         -- These symbols come from directly summing the two strings, so the range is larger
         -- Additionally, we can add 1 more to any symbol during algorithm 1, so the range must be increased accordingly
-        sumAlphabet = [0..maxChar + maxChar + 1]
+        sumAlphabet = [0..maxChar + maxChar + maxChar]
         digitAlphabet = [0..maxChar]
         alphabet = concats [fracAlphabet, sumAlphabet, digitAlphabet]
         withTransitions = makeTransitionsBy alphabet (^.info) alg1Dest states
@@ -88,7 +88,7 @@ alg1States maxChar = makeStates
         digitAlphabet = [0..maxChar]
         -- These symbols come from directly summing the two strings, so the range is larger
         -- Additionally, we can add 1 more to any symbol during algorithm 1, so the range must be increased accordingly
-        sumAlphabet = [0..maxChar + maxChar + 1]
+        sumAlphabet = [0..maxChar + maxChar + maxChar]
         initialInfo = Alg1Info (0,0,0) (0,0,0) (0,0,0) 0
         initialInfoList = [0,0,0,0,0,0,0,0,0,0]
         initial = State 0 (isFinalAlg1 initialInfoList) Map.empty initialInfo
