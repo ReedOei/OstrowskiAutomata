@@ -5,6 +5,8 @@ module Automata where
 
 import Control.Lens
 
+import Data.Array (Array, (!))
+import qualified Data.Array as Array
 import Data.List
 import Data.Function
 import Data.Map (Map)
@@ -39,10 +41,10 @@ makeTransitionsBy :: Ord b =>
                      [State a] -- States with transitions
 makeTransitionsBy alphabet keyMapper dest states = map makeTransition states
     where
-        stateMap = Map.fromList $ map (\s -> (keyMapper s, s)) states
+        stateMap = Map.fromList $ map (\s -> (keyMapper s, s^.num)) states
         makeTransition state = set transitions newTrans state
             where
-                newTrans = Map.fromList [ (symbol, fullState^.num) | symbol <- alphabet,
+                newTrans = Map.fromList [ (symbol, fullState) | symbol <- alphabet,
                                   fullState <- maybeToList $ dest state symbol >>= (`Map.lookup` stateMap) ]
 
 -- Simpler variant for when you just want equality for output/info (must define ordering for state info type)
@@ -141,18 +143,20 @@ minimizeAutomata alphabet states = prune $ map (renumber newNumbers) states
 -- iterate distinguish until it stops changing.
 distinguish alphabet partitions = concatMap distinguish' partitions
     where
-        partitionMap = Map.fromList $ concat $ zipWith (\i states -> map (\s -> (s^.num,i)) states) [0..] partitions
+        -- Maps state numbers to their partition index
+        partitionArr = Array.array (0, length (concat partitions) - 1) $ concat $ zipWith (\i states -> map (\s -> (s^.num,i)) states) [0..] partitions
 
         doLookup maybeNum = fromMaybe (-1) $ do
             num <- maybeNum
-            Map.lookup num partitionMap
+            pure $ partitionArr ! num
+
+        -- Input is list of (key,val) pairs, returns equivalence classes by comparing first element of the part
+        repartition = groupBy ((==) `on` fst) . sortBy (comparing fst)
 
         -- Splits the partition into (potentially) several partitions, each of which is a distinguishable group
-        distinguish' partition =
-            Map.elems $ Map.fromListWith (\[x] xs -> insertBy (comparing (^.num)) x xs) destStates
-            -- map (map (head . snd)) $ groupBy ((==) `on` fst) $ sortBy (comparing fst) destStates
+        distinguish' partition = map (map snd) $ repartition destStates
             where
-                destPartition x = (map (doLookup . transitionNum x) alphabet, [x])
+                destPartition x = (map (doLookup . transitionNum x) alphabet, x)
                 destStates = map destPartition partition
 
 -- | Lists all inputs that give the specified output in the automata given

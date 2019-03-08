@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: d94d0c74c1274045791edb92854dd6df279ae9824e59b7bed359a30197f9c4ea
+-- hash: d99f7ba9a0a7610b273606f6451bd7698497f8043306e3f8d6a9d18a7f2562a4
 
 name:           Ostrowski
 version:        0.1.0.0
@@ -42,6 +42,7 @@ library
       src
   build-depends:
       QuickCheck
+    , array
     , base >=4.7 && <5
     , bytestring
     , containers
@@ -65,6 +66,7 @@ executable Ostrowski
   build-depends:
       Ostrowski
     , QuickCheck
+    , array
     , base >=4.7 && <5
     , bytestring
     , containers
@@ -89,6 +91,7 @@ test-suite Ostrowski-test
   build-depends:
       Ostrowski
     , QuickCheck
+    , array
     , base >=4.7 && <5
     , bytestring
     , containers
