@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: fc521b72dc304b5799005734d1d155f1fbc4aa05af577471787a36eedf18f505
+-- hash: d94d0c74c1274045791edb92854dd6df279ae9824e59b7bed359a30197f9c4ea
 
 name:           Ostrowski
 version:        0.1.0.0
@@ -61,7 +61,7 @@ executable Ostrowski
       Paths_Ostrowski
   hs-source-dirs:
       app
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -O2
   build-depends:
       Ostrowski
     , QuickCheck
