@@ -68,8 +68,8 @@ data Alg1Info = Alg1Info
 makeLenses ''Alg1Info
 
 -- Scans Left to Right -- i.e., MSD
-alg1Automaton :: Int -> [State Alg1Info]
-alg1Automaton maxChar = minimizeAutomata alphabet $ prune withTransitions
+alg1Automaton :: Int -> [State ()]
+alg1Automaton maxChar = minimizeAutomata alphabet $ prune $ map (set info ()) withTransitions
     where
         fracAlphabet = [1..maxChar]
         -- These symbols come from directly summing the two strings, so the range is larger

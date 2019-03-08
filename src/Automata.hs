@@ -143,17 +143,16 @@ distinguish alphabet partitions = concatMap distinguish' partitions
     where
         partitionMap = Map.fromList $ concat $ zipWith (\i states -> map (\s -> (s^.num,i)) states) [0..] partitions
 
-        alphabetLen = fromIntegral $ length $ concat alphabet
-        encode = foldl (\a b -> alphabetLen * a + b) 0 . map (toInteger . fromIntegral)
-
         doLookup maybeNum = fromMaybe (-1) $ do
             num <- maybeNum
             Map.lookup num partitionMap
 
         -- Splits the partition into (potentially) several partitions, each of which is a distinguishable group
-        distinguish' partition = map (map fst) $ groupBy ((==) `on` snd) $ sortBy (comparing snd) destStates
+        distinguish' partition =
+            Map.elems $ Map.fromListWith (\[x] xs -> insertBy (comparing (^.num)) x xs) destStates
+            -- map (map (head . snd)) $ groupBy ((==) `on` fst) $ sortBy (comparing fst) destStates
             where
-                destPartition x = (x, encode $ map (doLookup . transitionNum x) alphabet)
+                destPartition x = (map (doLookup . transitionNum x) alphabet, [x])
                 destStates = map destPartition partition
 
 -- | Lists all inputs that give the specified output in the automata given
