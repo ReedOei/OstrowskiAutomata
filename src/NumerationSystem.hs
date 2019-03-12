@@ -80,6 +80,10 @@ alg1Automaton maxChar = minimizeAutomata alphabet $ prune $ map (set info ()) wi
         withTransitions = makeTransitionsBy alphabet (^.info) alg1Dest states
         states = alg1States maxChar
 
+-- | Returns True iff all zeroes are at the beginning of the list
+startZeroes :: (Num a, Eq a) => [a] -> Bool
+startZeroes = all (/= 0) . dropWhile (== 0)
+
 alg1States :: Int -> [State Alg1Info]
 alg1States maxChar = makeStates
     where
@@ -92,7 +96,10 @@ alg1States maxChar = makeStates
         initialInfo = Alg1Info (0,0,0) (0,0,0) (0,0,0) 0
         initialInfoList = [0,0,0,0,0,0,0,0,0,0]
         initial = State 0 (isFinalAlg1 initialInfoList) Map.empty initialInfo
-        makeStates = initial : zipWith go [1..] (concats (replicate 3 sumAlphabet ++ replicate 3 digitAlphabet ++ replicate 3 fracAlphabet ++ [[0,1]]))
+
+        valid [v1, v2, v3, w1, w2, w3, u1, u2, u3, g] = startZeroes [u1,u2,u3]
+
+        makeStates = initial : zipWith go [1..] (filter valid $ concats (replicate 3 sumAlphabet ++ replicate 3 digitAlphabet ++ replicate 3 fracAlphabet ++ [[0,1]]))
             where
                 go num l@[v1, v2, v3, w1, w2, w3, u1, u2, u3, g] =
                     State num (isFinalAlg1 l) Map.empty $ Alg1Info (u1,u2,u3) (v1,v2,v3) (w1,w2,w3) g
