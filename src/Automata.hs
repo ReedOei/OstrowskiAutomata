@@ -89,14 +89,12 @@ outputAutomataToAcceptAutomata acceptedOutput states =
 reachableStates :: [State a] -> [State a]
 reachableStates states@(state:_) = reachableStates' Set.empty [state]
     where
-        stateMap = Map.fromList $ map (\state -> (state^.num, state)) states
+        stateArr = Array.array (0, length states - 1) $ map (\state -> (state^.num, state)) states
 
-        findState n = maybeToList $ Map.lookup n stateMap
-
-        reachableStates' seen [] = concatMap findState $ sort $ Set.toList seen
+        reachableStates' seen [] = map (stateArr !) $ sort $ Set.toList seen
         reachableStates' seen (st:sts)
             | Set.member (st^.num) seen = reachableStates' seen sts
-            | otherwise = reachableStates' (Set.insert (st^.num) seen) $ concatMap findState (Map.elems (st^.transitions)) ++ sts
+            | otherwise = reachableStates' (Set.insert (st^.num) seen) $ map (stateArr !) (Map.elems (st^.transitions)) ++ sts
 
 unreachableStates :: Eq a => [State a] -> [State a]
 unreachableStates states = states \\ reachableStates states
