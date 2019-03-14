@@ -116,12 +116,14 @@ recogAll maxChar a =
 addCorrect :: Int -> Command
 addCorrect maxChar =
     let predicate name = Predicate (name ++ "_" ++ show maxChar)
+        recog v = predicate "recog" ["a",v]
     in Eval ("successor_proof_" ++ show maxChar) Nothing $
-        Forall ["a","x","y","z","u","v"] $
-            Op (ListOp "&" $ recogAll maxChar "a" ["x","y","z","u","v"] ++
-                             [predicate "successor" ["a","y","u"], predicate "successor" ["a","z","v"]])
-            "=>" $
-                    Op (predicate "add" ["a","x","y","z"]) "<=>" (predicate "add" ["a","x","u","v"])
+        Forall ["a","x"] $ Op (recog "x") "=>" $
+        Forall ["y"] $ Op (recog "y") "=>" $
+        Forall ["z"] $ Op (recog "z") "=>" $
+        Forall ["u"] $ Op (Op (recog "z") "&" (predicate "successor" ["a","y","u"])) "=>" $
+        Forall ["v"] $ Op (Op (recog "v") "&" (predicate "successor" ["a","z","v"])) "=>" $
+            Op (predicate "add" ["a","x","y","z"]) "<=>" (predicate "add" ["a","x","u","v"])
 
 -- | The query to run to generate the general bounded addition automata
 -- | The resulting automata takes in a, x, y, z, and accepts when x +_a y = z.
@@ -135,7 +137,7 @@ addAutomatonPrf maxChar =
         alg2 = Predicate ("add_alg2_" ++ show maxChar) ["a","r","s"]
         alg3 = Predicate ("add_alg3_" ++ show maxChar) ["a","s","z"]
     in Def ("add_" ++ show maxChar) Nothing $
-        Exists ["w", "r", "s"] $ ListOp "&" $ allValid ++ [alg0, Reverse alg1, alg2, Reverse alg3]
+        ListOp "&" $ allValid ++ [Exists ["w"] $ Op alg0 "&" $ Exists ["r"] $ Op (Reverse alg1) "&" $ Exists ["s"] $ Op alg2 "&" $ Reverse alg3]
 
 takeOneOfEach _ [] = []
 takeOneOfEach [] _ = []
