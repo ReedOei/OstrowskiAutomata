@@ -7,6 +7,7 @@ import AutomataParser
 import qualified CAlpha
 import Lib
 import NumerationSystem
+import PatternExtractor
 import TheoremFinder
 import WalnutProof
 
@@ -38,10 +39,7 @@ main = do
     args <- getArgs
 
     case args of
-        ["test", maxCharStr] -> do
-            let states = alg1Automaton $ read maxCharStr
-
-            print $ length states
+        ["patterns", fname] -> automatonPatterns fname
 
         ["run", fname, inputStr] -> do
             let input = read inputStr

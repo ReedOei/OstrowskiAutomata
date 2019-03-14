@@ -18,3 +18,10 @@ unbordered = not . bordered
 substrings :: [a] -> [[a]]
 substrings = filter (not . null) . concatMap inits . tails
 
+untilNoChange :: Eq a => (a -> a) -> a -> a
+untilNoChange f x
+    | newVal == x = x
+    | otherwise = untilNoChange f newVal
+    where newVal = f x
+
+

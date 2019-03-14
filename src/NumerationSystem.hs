@@ -105,11 +105,16 @@ alg1States maxChar = makeStates
             | x == 0 && y /= 0 = False
             | otherwise = sameZeroes xs ys
 
+        -- TODO: Completely remvoe v1, w1, since they always have to be the same anyway
+
+        alphabet = concats [tail fracAlphabet, sumAlphabet, digitAlphabet]
         valid [v1, v2, v3, w1, w2, w3, u1, u2, u3, g] = sameZeroes [u1,u2,u3] [v1,v2,v3] &&
                                                         sameZeroes [u1,u2,u3] [w1,w2,w3] &&
                                                         startZeroes [u1,u2,u3] &&
                                                         v1 == w1 &&
-                                                        (if g == 1 then v1 <= u1 && v2 <= u2 && v3 == u3 - 1 else True)
+                                                        (if g == 1 then v1 <= u1 && v2 <= u2 && v3 == u3 - 1 else True) &&
+                                                        not (null (mapMaybe (alg1Dest state) alphabet))
+            where state = State 0 0 Map.empty $ Alg1Info (u1,u2,u3) (v1,v2,v3) (w1,w2,w3) g
 
         makeStates = initial : zipWith go [1..] (filter valid $ concats (replicate 3 sumAlphabet ++ replicate 3 digitAlphabet ++ replicate 3 fracAlphabet ++ [[0,1]]))
             where

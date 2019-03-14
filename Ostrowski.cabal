@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: d99f7ba9a0a7610b273606f6451bd7698497f8043306e3f8d6a9d18a7f2562a4
+-- hash: 3cbe112e28236764c12e8ee2bed58debd1debfec25c48c7fa7858c33aaa4ac01
 
 name:           Ostrowski
 version:        0.1.0.0
@@ -32,6 +32,7 @@ library
       CAlpha
       Lib
       NumerationSystem
+      PatternExtractor
       Sturmian
       TheoremFinder
       Util

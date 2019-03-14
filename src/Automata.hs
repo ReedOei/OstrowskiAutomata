@@ -19,6 +19,8 @@ import qualified Data.Set as Set
 
 import System.IO.Unsafe
 
+import Util
+
 data State a = State
     { _num :: Int
     , _output :: Int
@@ -119,12 +121,6 @@ renumberTransition newNumbers t = fromJust $ Map.lookup t newNumbers
 -- Removes all unreachable states from an automata
 prune :: [State a] -> [State a]
 prune = renumberStates . reachableStates
-
-untilNoChange :: Eq a => (a -> a) -> a -> a
-untilNoChange f x
-    | newVal == x = x
-    | otherwise = untilNoChange f newVal
-    where newVal = f x
 
 -- | Finds all reachable states, given a list of inputs.
 --   Can be useful if your input language is not just Sigma*.
