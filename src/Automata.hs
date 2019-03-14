@@ -4,6 +4,7 @@
 module Automata where
 
 import Control.Lens
+import qualified Control.Monad.State.Strict as St
 
 import Data.Array (Array, (!))
 import qualified Data.Array as Array
@@ -15,6 +16,8 @@ import Data.Maybe
 import Data.Ord
 import Data.Set (Set)
 import qualified Data.Set as Set
+
+import System.IO.Unsafe
 
 data State a = State
     { _num :: Int
@@ -141,7 +144,9 @@ minimizeAutomata alphabet states = prune $ map (renumber newNumbers) states
 
 -- For each letter in the alphabet, we can distinguish two different states x and y if that letter a from x goes to a state in a different partition than it does from y
 -- iterate distinguish until it stops changing.
-distinguish alphabet partitions = concatMap distinguish' partitions
+distinguish alphabet partitions = unsafePerformIO $ do
+    putStrLn $ "Minimizing, have " ++ show (length partitions) ++ " partitions."
+    pure $ concatMap distinguish' partitions
     where
         -- Maps state numbers to their partition index
         partitionArr = Array.array (0, length (concat partitions) - 1) $ concat $ zipWith (\i states -> map (\s -> (s^.num,i)) states) [0..] partitions
@@ -154,10 +159,20 @@ distinguish alphabet partitions = concatMap distinguish' partitions
         repartition = groupBy ((==) `on` fst) . sortBy (comparing fst)
 
         -- Splits the partition into (potentially) several partitions, each of which is a distinguishable group
-        distinguish' partition = map (map snd) $ repartition destStates
+        distinguish' partition = map (map snd) $ repartition $ St.evalState destStates Map.empty
             where
-                destPartition x = (map (doLookup . transitionNum x) alphabet, x)
-                destStates = map destPartition partition
+                destPartition :: State a -> St.State (Map [Int] Int) (Int, State a)
+                destPartition x = do
+                    let dests = map (doLookup . transitionNum x) alphabet
+
+                    m <- St.get
+                    case Map.lookup dests m of
+                        Nothing -> do
+                            St.modify $ Map.insert dests $ Map.size m
+                            pure (Map.size m, x)
+                        Just i -> pure (i, x)
+
+                destStates = mapM destPartition partition
 
 -- | Lists all inputs that give the specified output in the automata given
 findInputs :: Int -> [State a] -> [[[Int]]]

@@ -35,6 +35,11 @@ main = do
     args <- getArgs
 
     case args of
+        ["test", maxCharStr] -> do
+            let states = alg1Automaton $ read maxCharStr
+
+            print $ length states
+
         ["run", fname, inputStr] -> do
             let input = read inputStr
             (numSys, states) <- parseAutomata <$> readUtf16File fname

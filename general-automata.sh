@@ -12,6 +12,7 @@ fi
 
 max_dig="$1"
 
+# stack build --profile
 # stack exec -- Ostrowski general "$max_dig" +RTS -h -p
 stack install
 Ostrowski general "$max_dig"
