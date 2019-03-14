@@ -8,6 +8,7 @@ import Control.Lens
 import Data.Function
 import Data.Map (Map)
 import qualified Data.Map as Map
+import Data.Maybe
 
 import Automata
 import Util
@@ -56,7 +57,7 @@ alg0States = [State 0 1 Map.empty ()]
 
 alg0Dest :: State () -> [Int] -> Maybe (Int, ())
 alg0Dest state [a, b, c]
-    | a + b == c = Just $ (1, ())
+    | a + b == c = Just (1, ())
     | otherwise = Nothing
 
 data Alg1Info = Alg1Info
@@ -68,9 +69,9 @@ data Alg1Info = Alg1Info
 makeLenses ''Alg1Info
 
 -- Scans Left to Right -- i.e., MSD
-alg1Automaton :: Int -> [State ()]
+-- alg1Automaton :: Int -> [State ()]
 alg1Automaton maxChar = minimizeAutomata alphabet $ prune $ map (set info ()) withTransitions
--- alg1Automaton maxChar = prune $ map (set info ()) withTransitions
+-- alg1Automaton maxChar = withTransitions
     where
         fracAlphabet = [1..maxChar]
         -- These symbols come from directly summing the two strings, so the range is larger
@@ -83,7 +84,7 @@ alg1Automaton maxChar = minimizeAutomata alphabet $ prune $ map (set info ()) wi
 
 -- | Returns True iff all zeroes are at the beginning of the list
 startZeroes :: (Num a, Eq a) => [a] -> Bool
-startZeroes = all (/= 0) . dropWhile (== 0)
+startZeroes = notElem 0 . dropWhile (== 0)
 
 alg1States :: Int -> [State Alg1Info]
 alg1States maxChar = makeStates
@@ -98,7 +99,17 @@ alg1States maxChar = makeStates
         initialInfoList = [0,0,0,0,0,0,0,0,0,0]
         initial = State 0 (isFinalAlg1 initialInfoList) Map.empty initialInfo
 
-        valid [v1, v2, v3, w1, w2, w3, u1, u2, u3, g] = startZeroes [u1,u2,u3]
+
+        sameZeroes [] [] = True
+        sameZeroes (x:xs) (y:ys)
+            | x == 0 && y /= 0 = False
+            | otherwise = sameZeroes xs ys
+
+        valid [v1, v2, v3, w1, w2, w3, u1, u2, u3, g] = sameZeroes [u1,u2,u3] [v1,v2,v3] &&
+                                                        sameZeroes [u1,u2,u3] [w1,w2,w3] &&
+                                                        startZeroes [u1,u2,u3] &&
+                                                        v1 == w1 &&
+                                                        (if g == 1 then v1 <= u1 && v2 <= u2 && v3 == u3 - 1 else True)
 
         makeStates = initial : zipWith go [1..] (filter valid $ concats (replicate 3 sumAlphabet ++ replicate 3 digitAlphabet ++ replicate 3 fracAlphabet ++ [[0,1]]))
             where
@@ -124,9 +135,13 @@ isFinalAlg1 [v1, v2, v3, w1, w2, w3, u1, u2, u3, g] =
 
 alg1Dest :: State Alg1Info -> [Int] -> Maybe Alg1Info
 alg1Dest state [u4, v4', w4]
-    | v2 < u2 && v3 > u3 && v4 == 0 && v1 == w1 = Just $ Alg1Info (u2,u3,u4) (v2+1,v3-(u3+1),u4-1) (w2,w3,w4) 1
-    | v2 < u2 && v3 >= u3 && v3 <= 2*u3 && v4 > 0 && v1 == w1 = Just $ Alg1Info (u2,u3,u4) (v2+1,v3-u3,v4-1) (w2,w3,w4) 0
-    | v1 == w1 = Just $ Alg1Info (u2,u3,u4) (v2,v3,v4) (w2,w3,w4) 0
+    | v2 < u2 && v3 > u3 && v4 == 0 && v1 == w1 =
+        if v2 + 1 == w2 then Just $ Alg1Info (u2,u3,u4) (v2+1,v3-(u3+1),u4-1) (w2,w3,w4) 1
+        else Nothing
+    | v2 < u2 && v3 >= u3 && v3 <= 2*u3 && v4 > 0 && v1 == w1 =
+        if v2+1 == w2 then Just $ Alg1Info (u2,u3,u4) (v2+1,v3-u3,v4-1) (w2,w3,w4) 0
+        else Nothing
+    | v1 == w1 && v2 == w2 = Just $ Alg1Info (u2,u3,u4) (v2,v3,v4) (w2,w3,w4) 0
     | otherwise = Nothing
     where
         (u1,u2,u3) = state^.info.u
