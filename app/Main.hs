@@ -12,6 +12,7 @@ import WalnutProof
 
 import System.Directory
 import System.Environment
+import System.IO
 
 makeAlphabetStr :: [[Int]] -> String
 makeAlphabetStr = unwords . map go
@@ -32,6 +33,8 @@ makeGeneralAutomata name maxChar alphabet gen = do
 
 main :: IO ()
 main = do
+    hSetBuffering stdout NoBuffering
+
     args <- getArgs
 
     case args of
