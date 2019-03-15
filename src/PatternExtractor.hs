@@ -55,9 +55,6 @@ automatonRanges state = map makeRange $ Map.toList $ state^.transitions
     where
         makeRange (symbol, dest) = Ranges (map (\a -> (a,a)) symbol) dest
 
--- simplifyRanges :: [State ()] -> [[Ranges Int Int]]
--- TODO: Keep the state info with this so that we can actually use it...
--- TODO: Convert these ranges back to transitions
 simplifyRanges state = sortBy (comparing (^.val)) $ unifyFold (joinRanges allRanges) allRanges
     where
         allRanges = automatonRanges state
