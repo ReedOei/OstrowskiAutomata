@@ -1,0 +1,10 @@
+def square "Ez $zero_5(z) & $lt_5(z,n) & $recog_5(a,n) & Ei $recog_5(a,i) & (At ($recog_5(a,t) & $lt_5(t,n)) =>
+    (Eti,tj $recog_5(a,ti) & $recog_5(a,tj) & $add_5(a,i,t,ti) & $add_5(a,ti,n,tj) & C_5[ti] = C_5[tj]))":
+
+eval square "$square(a,n)":
+
+reg eventually_zero {0,1,2,3,4,5} "0*(1|11|12|2|3|13|4|14)0*":
+
+eval square_end_in_zero "Aa,n $square(a,n) => $eventually_zero(n)":
+eval square_not_end_in_zero "Ea,n $square(a,n) & ~$eventually_zero(n)":
+

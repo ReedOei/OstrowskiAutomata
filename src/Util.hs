@@ -24,4 +24,8 @@ untilNoChange f x
     | otherwise = untilNoChange f newVal
     where newVal = f x
 
+makeAlphabetStr :: [[Int]] -> String
+makeAlphabetStr = unwords . map go
+    where
+        go alphabet = "{" ++ intercalate "," (map show alphabet) ++ "}"
 

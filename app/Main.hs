@@ -10,15 +10,11 @@ import NumerationSystem
 import PatternExtractor
 import TheoremFinder
 import WalnutProof
+import Util
 
 import System.Directory
 import System.Environment
 import System.IO
-
-makeAlphabetStr :: [[Int]] -> String
-makeAlphabetStr = unwords . map go
-    where
-        go alphabet = "{" ++ intercalate "," (map show alphabet) ++ "}"
 
 makeGeneralAutomata :: String -> Int -> [[Int]] -> (Int -> [State a]) -> IO [State a]
 makeGeneralAutomata name maxChar alphabet gen = do
@@ -39,7 +35,18 @@ main = do
     args <- getArgs
 
     case args of
-        ["patterns", fname] -> automatonPatterns fname
+        ["patterns", fname] -> mapM_ printRanges =<< readAutomaton fname
+
+        ["generate", "pattern", "add", fname, maxCharStr] -> do
+            let maxChar = read maxCharStr
+            let fracAlphabet = [1..maxChar]
+            let digitAlphabet = [0..maxChar]
+
+            let alphabet = [fracAlphabet, digitAlphabet, digitAlphabet, digitAlphabet]
+
+            (numSys, states) <- genPatternAutomaton alphabet fname
+
+            putStrLn $ walnutOutput numSys states
 
         ["run", fname, inputStr] -> do
             let input = read inputStr
