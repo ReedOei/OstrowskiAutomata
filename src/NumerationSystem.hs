@@ -18,6 +18,29 @@ data RecogInfo = RecogInfo
     deriving (Show, Eq, Ord)
 makeLenses ''RecogInfo
 
+baseNRecogAutomaton :: Int -> [State ()]
+baseNRecogAutomaton maxChar = [State 0 1 trans ()]
+    where
+        trans = Map.fromList $ map (\l -> ([l],0)) [0..maxChar]
+
+baseNAddAutomaton :: Int -> [State (Int, Int)]
+baseNAddAutomaton maxChar = minimizeAutomata alphabet $ prune withTransitions
+    where
+        withTransitions = makeTransitionsBy alphabet (^.info) baseNDest states
+        alphabet = concats [digits, digits, digits]
+        digits = [0..maxChar]
+        initial = State 0 1 Map.empty (maxChar - 1, 0)
+        states = initial : zipWith go [1..] digits
+        go num carry = State num (if carry == 0 then 1 else 0) Map.empty (maxChar - 1, carry)
+
+baseNDest :: State (Int, Int) -> [Int] -> Maybe (Int, Int)
+baseNDest state [a,b,c]
+    | m == c = Just (base, d)
+    | otherwise = Nothing
+    where
+        (base, carry) = state^.info
+        (d,m) = (a + b + carry) `divMod` base
+
 generalRecogAutomata :: Int -> [State RecogInfo]
 generalRecogAutomata maxChar = minimizeAutomata alphabet $ prune withTransitions
     where

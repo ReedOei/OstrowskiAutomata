@@ -27,6 +27,8 @@ mv "add_alg1_$max_dig.txt" "$WALNUT_AUTOMATA_PATH"
 mv "add_alg2_$max_dig.txt" "$WALNUT_AUTOMATA_PATH"
 mv "add_alg3_$max_dig.txt" "$WALNUT_AUTOMATA_PATH"
 mv "C_$max_dig.txt" "$WALNUT_WORD_PATH"
+mv "base_add_$max_dig.txt" "$WALNUT_CUSTOM_BASES_PATH/base_${max_dig}_addition.txt"
+mv "base_$max_dig.txt" "$WALNUT_CUSTOM_BASES_PATH"
 
 prfs="$(realpath "general_${max_dig}_prfs.txt")"
 
