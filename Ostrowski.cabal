@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 3cbe112e28236764c12e8ee2bed58debd1debfec25c48c7fa7858c33aaa4ac01
+-- hash: fd24c55fda18b0c1acee4e07d2c85dd28f196dd1bc328ebd5a9f32514b5fdd3f
 
 name:           Ostrowski
 version:        0.1.0.0
@@ -29,6 +29,7 @@ library
   exposed-modules:
       Automata
       AutomataParser
+      BaseNAutomata
       CAlpha
       Lib
       NumerationSystem

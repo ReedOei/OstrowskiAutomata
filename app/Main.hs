@@ -4,6 +4,7 @@ import Data.List
 
 import Automata
 import AutomataParser
+import BaseNAutomata
 import qualified CAlpha
 import Lib
 import NumerationSystem
@@ -27,6 +28,9 @@ makeGeneralAutomata name maxChar alphabet gen = do
     writeUtf16File fname $ walnutOutput alphabetStr states
 
     pure states
+
+readNumSys :: String -> [[Int]]
+readNumSys = map read . words . replace '{' '[' . replace '}' ']'
 
 main :: IO ()
 main = do
@@ -78,6 +82,18 @@ main = do
 
             let calpha = CAlpha.genAutomata $ map (:[]) [0..maxChar]
             writeUtf16File ("C_" ++ maxCharStr ++ ".txt") $ walnutOutput (makeAlphabetStr [digitAlphabet]) calpha
+
+        ["toBase", baseStr, fname] -> do
+            let base = read baseStr
+
+            (numSysStr, states) <- parseAutomata <$> readUtf16File fname
+
+            let numSys = readNumSys numSysStr
+
+            let newNumSys = replicate (length numSys) [0..base - 1]
+            let output = toBaseN base numSys states
+
+            putStrLn $ walnutOutput (makeAlphabetStr newNumSys) output
 
         ["inputs", fname, targetOutputStr] -> do
             (numSys, states) <- parseAutomata <$> readUtf16File fname

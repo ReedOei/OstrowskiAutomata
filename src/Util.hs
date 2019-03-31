@@ -29,3 +29,18 @@ makeAlphabetStr = unwords . map go
     where
         go alphabet = "{" ++ intercalate "," (map show alphabet) ++ "}"
 
+padRight :: Int -> a -> [a] -> [a]
+padRight minLen e xs = xs ++ replicate (minLen - length xs) e
+
+baseNInput :: Int -> Int -> [[Int]] -> [[Int]]
+baseNInput base maxLen input = concatMap (padRight maxLen padChar . go) input
+    where
+        padChar :: [Int]
+        padChar = replicate (length (head input)) 0
+
+        go vals
+            | all (< base) vals = [vals]
+            | otherwise = ms : go ds
+                where
+                    (ds, ms) = unzip $ map (`divMod` base) vals
+

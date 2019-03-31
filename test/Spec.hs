@@ -1,11 +1,17 @@
 import Data.List
 
+import System.IO.Unsafe
+
 import Test.Hspec
+import Test.QuickCheck
 
 import Automata
+import BaseNAutomata
 import qualified CAlpha
 import Lib
+import NumerationSystem
 import Sturmian
+import Util
 
 testAutomata :: [[Int]] -> [Int] -> [Int] -> [Int] -> ([Int], [Int]) -> ([Int], [Int]) -> Int -> IO ()
 testAutomata alphabet zRep oRep reps zPeriod oPeriod n = compareSeqs 0 fromAutomata actual
@@ -51,8 +57,54 @@ seqCheckLength = 100000
 
 makeAlphabet = map (:[])
 
+checkBaseNAutomaton :: [State a] -> [State b] -> Int -> Int -> [[Int]] -> NonEmptyList (NonNegative Int) -> Bool
+checkBaseNAutomaton origAutomaton newAutomaton base maxLen symbols tempSeq =
+    let seq = map ((`mod` length symbols) . getNonNegative) $ getNonEmpty tempSeq
+        input = map (symbols !!) seq
+        newInput = baseNInput base maxLen input
+        origOutput = automataOutput origAutomaton [input]
+        newOutput = automataOutput newAutomaton [newInput]
+    in origOutput == newOutput
+    -- in unsafePerformIO $ do
+    --     print (input, newInput, origOutput, newOutput)
+    --     pure $ origOutput == newOutput
+
 main :: IO ()
 main = hspec $ do
+    describe "toBaseN" $ do
+        it "creates equivalent automaton to alg2 for maxChar = 4 and base = 2" $ do
+            let base = 3
+            let maxChar = 12
+
+            let digitAlphabet = [0..maxChar]
+            let alphabet = [digitAlphabet]
+            let symbols = concats alphabet
+
+            let maxVal = maximum (map length alphabet) + 1
+            let maxLen = ceiling $ log (fromIntegral maxVal) / log (fromIntegral base)
+
+            let origAutomaton = baseNRecogAutomaton maxChar
+            let newAutomaton = toBaseN base alphabet origAutomaton
+
+            property $ checkBaseNAutomaton origAutomaton newAutomaton base maxLen symbols
+
+        it "creates equivalent automaton to alg2 for maxChar = 4 and base = 2" $ do
+            let base = 2
+            let maxChar = 4
+
+            let fracAlphabet = [1..maxChar]
+            let digitAlphabet = [0..maxChar]
+            let alphabet = [fracAlphabet, digitAlphabet, digitAlphabet]
+            let symbols = concats alphabet
+
+            let maxVal = maximum (map length alphabet) + 1
+            let maxLen = ceiling $ log (fromIntegral maxVal) / log (fromIntegral base)
+
+            let origAutomaton = alg2Automaton maxChar
+            let newAutomaton = toBaseN base alphabet origAutomaton
+
+            property $ checkBaseNAutomaton origAutomaton newAutomaton base maxLen symbols
+
     describe "makeOutputAutomata" $ do
         it "generates separate output automata for each of the output symbols" $ do
             let automata = makeOutputAutomata (makeAlphabet [0,1,2,3,4]) [0,1] [2,3,4,5,6,7,2,8,4,9,6,3,2,5,4,7,6,8,2,9,4,3,6,5,2,7,4,8,6,9] (0:1:4:2:cycle [3])

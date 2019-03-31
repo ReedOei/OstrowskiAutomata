@@ -4,6 +4,7 @@
 module Automata where
 
 import Control.Lens
+import Control.Monad
 import qualified Control.Monad.State.Strict as St
 
 import Data.Array (Array, (!))
@@ -65,19 +66,21 @@ transition stateMap state c = do
     num <- transitionNum state c
     Map.lookup num stateMap
 
-runAutomata :: [State a] -> [[Int]] -> (([[Int]], Int), ([State a], State a))
+runAutomata :: [State a] -> [[Int]] -> Maybe (([[Int]], Int), ([State a], State a))
 runAutomata states input =
-    let ((output, sts), finalSt) = foldl run (([], []), head states) input
-    in ((input, last output), (sts, finalSt))
+    case foldM run (([], []), head states) input of
+        Nothing -> Nothing
+        Just ((output, sts), finalSt) -> Just ((input, last output), (sts, finalSt))
     where
         stateMap = Map.fromList $ map (\state -> (state^.num, state)) states
 
         run ((out, stList), state) c =
-            let st = fromJust $ transition stateMap state c
-            in ((out ++ [st^.output], stList ++ [st]), st)
+            case transition stateMap state c of
+                Nothing -> Nothing
+                Just st -> Just ((out ++ [st^.output], stList ++ [st]), st)
 
 automataOutput :: [State a] -> [[[Int]]] -> [Int]
-automataOutput states = map (snd . fst . runAutomata states)
+automataOutput states = map (\input -> fromMaybe (-1) (snd . fst <$> runAutomata states input))
 
 outputAutomataToAcceptAutomata :: Eq a => Int -> [State a] -> [State a]
 outputAutomataToAcceptAutomata acceptedOutput states =
@@ -121,11 +124,6 @@ renumberTransition newNumbers t = fromJust $ Map.lookup t newNumbers
 -- Removes all unreachable states from an automata
 prune :: [State a] -> [State a]
 prune = renumberStates . reachableStates
-
--- | Finds all reachable states, given a list of inputs.
---   Can be useful if your input language is not just Sigma*.
-optimize :: Eq a => [State a] -> [[[Int]]] -> [State a]
-optimize states = nub . concatMap (fst . snd . runAutomata states)
 
 minimizeAutomata :: Eq a => [[Int]] -> [State a] -> [State a]
 minimizeAutomata alphabet states = prune $ map (renumber newNumbers) states
