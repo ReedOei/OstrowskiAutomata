@@ -27,14 +27,14 @@ mv "add_alg1_$max_dig.txt" "$WALNUT_AUTOMATA_PATH"
 mv "add_alg2_$max_dig.txt" "$WALNUT_AUTOMATA_PATH"
 mv "add_alg3_$max_dig.txt" "$WALNUT_AUTOMATA_PATH"
 mv "C_$max_dig.txt" "$WALNUT_WORD_PATH"
-mv "base_add_$max_dig.txt" "$WALNUT_CUSTOM_BASES_PATH/base_${max_dig}_addition.txt"
-mv "base_$max_dig.txt" "$WALNUT_CUSTOM_BASES_PATH"
+mv "base_add_$max_dig.txt" "$WALNUT_CUSTOM_BASES_PATH/lsd_base_${max_dig}_addition.txt"
+mv "base_$max_dig.txt" "$WALNUT_CUSTOM_BASES_PATH/lsd_base_${max_dig}.txt"
 
 prfs="$(realpath "general_${max_dig}_prfs.txt")"
 
 (
     cd "$WALNUT_PATH"
-    cat "$prfs" | java -Xmx8g -cp bin Main.prover
+    cat "$prfs" | java -Xmx40g -cp bin Main.prover
 
     check_true "Result/base_proof_${max_dig}.txt"
     check_true "Result/successor_proof_${max_dig}.txt"
