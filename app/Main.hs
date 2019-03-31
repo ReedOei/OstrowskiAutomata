@@ -63,7 +63,7 @@ main = do
 
             let digitAlphabet = [0..maxChar]
 
-            makeGeneralAutomata "base_add" maxChar [digitAlphabet] baseNAddAutomaton
+            makeGeneralAutomata "base_add" maxChar [digitAlphabet, digitAlphabet, digitAlphabet] baseNAddAutomaton
             makeGeneralAutomata "base" maxChar [digitAlphabet] baseNRecogAutomaton
 
             pure ()
@@ -84,7 +84,7 @@ main = do
             makeGeneralAutomata "add_alg1" maxChar [fracAlphabet, sumAlphabet, digitAlphabet] alg1Automaton
             makeGeneralAutomata "add_alg2" maxChar [fracAlphabet, digitAlphabet, digitAlphabet] alg2Automaton
             makeGeneralAutomata "add_alg3" maxChar [fracAlphabet, digitAlphabet, digitAlphabet] alg3Automaton
-            makeGeneralAutomata "base_add" maxChar [digitAlphabet] baseNAddAutomaton
+            makeGeneralAutomata "base_add" maxChar [digitAlphabet, digitAlphabet, digitAlphabet] baseNAddAutomaton
             makeGeneralAutomata "base" maxChar [digitAlphabet] baseNRecogAutomaton
 
             let prfs = map ($ maxChar) [addAutomatonPrf, generalLtDef, generalLte, doubleDef, subDef, addCorrectBase, successorDef, addCorrect]
