@@ -57,6 +57,17 @@ main = do
             (numSys, states) <- parseAutomata <$> readUtf16File fname
 
             print $ head $ automataOutput states [input]
+
+        ["base", maxCharStr] -> do
+            let maxChar = read maxCharStr
+
+            let digitAlphabet = [0..maxChar]
+
+            makeGeneralAutomata "base_add" maxChar [digitAlphabet] baseNAddAutomaton
+            makeGeneralAutomata "base" maxChar [digitAlphabet] baseNRecogAutomaton
+
+            pure ()
+
         ["general", maxCharStr] -> do
             let maxChar = read maxCharStr
 
@@ -73,8 +84,8 @@ main = do
             makeGeneralAutomata "add_alg1" maxChar [fracAlphabet, sumAlphabet, digitAlphabet] alg1Automaton
             makeGeneralAutomata "add_alg2" maxChar [fracAlphabet, digitAlphabet, digitAlphabet] alg2Automaton
             makeGeneralAutomata "add_alg3" maxChar [fracAlphabet, digitAlphabet, digitAlphabet] alg3Automaton
-            makeGeneralAutomata "base_add" maxChar [digitAlphabet, digitAlphabet, digitAlphabet] baseNAddAutomaton
-            makeGeneralAutomata "base" maxChar [digitAlphabet, digitAlphabet, digitAlphabet] baseNRecogAutomaton
+            makeGeneralAutomata "base_add" maxChar [digitAlphabet] baseNAddAutomaton
+            makeGeneralAutomata "base" maxChar [digitAlphabet] baseNRecogAutomaton
 
             let prfs = map ($ maxChar) [addAutomatonPrf, generalLtDef, generalLte, doubleDef, subDef, addCorrectBase, successorDef, addCorrect]
 
