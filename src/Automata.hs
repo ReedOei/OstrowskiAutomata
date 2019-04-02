@@ -137,11 +137,12 @@ minimizeAutomata alphabet states = prune $ map (renumber newNumbers) states
 -- For each letter in the alphabet, we can distinguish two different states x and y if that letter a from x goes to a state in a different partition than it does from y
 -- iterate distinguish until it stops changing.
 distinguish alphabet partitions = unsafePerformIO $ do
-    putStrLn $ "Minimizing, have " ++ show (length partitions) ++ " partitions."
+    putStrLn $ "Minimizing, have " ++ show (length partitions) ++ " partitions, " ++ show stateNum ++ " states."
     pure $ concatMap distinguish' partitions
     where
+        stateNum = length (concat partitions)
         -- Maps state numbers to their partition index
-        partitionArr = Array.array (0, length (concat partitions) - 1) $ concat $ zipWith (\i states -> map (\s -> (s^.num,i)) states) [0..] partitions
+        partitionArr = Array.array (0, stateNum - 1) $ concat $ zipWith (\i states -> map (\s -> (s^.num,i)) states) [0..] partitions
 
         doLookup maybeNum = fromMaybe (-1) $ do
             num <- maybeNum
