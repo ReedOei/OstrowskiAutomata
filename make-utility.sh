@@ -64,7 +64,9 @@ binary "$WALNUT_AUTOMATA_PATH/successor_${max_dig}.txt"
     echo "def times_1_${max_dig} \"?lsd_base_${max_dig} \$recog_${max_dig}(a,b) & b = c\":"
 
     for i in $(seq 1 "$max_pow"); do
-        times "$i"
+        if [[ "$i" -gt "1" ]]; then
+            times "$i"
+        fi
 
         pow "$i"
     done
