@@ -26,7 +26,7 @@ mv "add_alg0_$max_dig.txt" "$WALNUT_AUTOMATA_PATH"
 mv "add_alg1_$max_dig.txt" "$WALNUT_AUTOMATA_PATH"
 mv "add_alg2_$max_dig.txt" "$WALNUT_AUTOMATA_PATH"
 mv "add_alg3_$max_dig.txt" "$WALNUT_AUTOMATA_PATH"
-mv "C_$max_dig.txt" "$WALNUT_WORD_PATH"
+mv "C_${max_dig}_temp.txt" "$WALNUT_WORD_PATH"
 mv "base_add_$max_dig.txt" "$WALNUT_CUSTOM_BASES_PATH/lsd_base_${max_dig}_addition.txt"
 mv "base_$max_dig.txt" "$WALNUT_CUSTOM_BASES_PATH/lsd_base_${max_dig}.txt"
 

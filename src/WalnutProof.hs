@@ -11,6 +11,7 @@ import Sturmian
 
 data Command = Eval String (Maybe String) Query
              | Def String (Maybe String) Query
+             | Reg String (Maybe String) String
     deriving (Show, Eq)
 
 data Query = Forall [String] Query
@@ -36,8 +37,8 @@ instance Num Query where
     a * b = Op a "*" b
     fromInteger = IntVal . fromIntegral
 
-(.==) :: Query -> Query -> Query
 a .== b = Op a "=" b
+a ./= b = Op a "!=" b
 
 varStr (Var s) = s
 
@@ -47,6 +48,8 @@ instance WalnutOutput Command where
 
     walnutStr (Def name Nothing query) = "def " ++ name ++ " \"" ++ walnutStr query ++ "\":"
     walnutStr (Def name (Just numSys) query) = "def " ++ name ++ " \"?" ++ numSys ++ " " ++ walnutStr query ++ "\":"
+
+    walnutStr (Reg name (Just numSys) query) = "reg " ++ name ++ " " ++ numSys ++ " \"" ++ query ++ "\":"
 
 instance WalnutOutput Query where
     walnutStr (Forall names query) = "A" ++ intercalate "," names ++ " " ++ walnutStr query
@@ -70,6 +73,21 @@ instance WalnutOutput Query where
 
 validRep :: Query -> String -> Query -> Query
 validRep base recogName n = Predicate recogName [base, n]
+
+startsWithOne :: Int -> Command
+startsWithOne maxChar =
+    let predicate name = Predicate (name ++ "_" ++ show maxChar)
+    in Reg ("starts_one_" ++ show maxChar) (Just ("{" ++ intercalate "," (map show [1..maxChar]) ++ "}")) $
+        "1(" ++ intercalate "|" (map show [1..maxChar]) ++ ")*"
+
+generalC :: Int -> Command
+generalC maxChar =
+    let predicate name = Predicate (name ++ "_" ++ show maxChar)
+    in Def ("C_" ++ show maxChar) Nothing $
+        Op (predicate "recog" ["a","n"]) "&" $
+            Op (Op (predicate "starts_one" ["a"]) "&" (SymbolAt ("C_" ++ show maxChar ++ "_temp") "n" ./= Symbol 1))
+            "|" $
+            Op (Not (predicate "starts_one" ["a"])) "&" (SymbolAt ("C_" ++ show maxChar ++ "_temp") "n" .== Symbol 1)
 
 generalLte :: Int -> Command
 generalLte maxChar =
