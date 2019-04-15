@@ -87,7 +87,7 @@ main = do
             makeGeneralAutomata "base_add" maxChar [digitAlphabet, digitAlphabet, digitAlphabet] baseNAddAutomaton
             makeGeneralAutomata "base" maxChar [digitAlphabet] baseNRecogAutomaton
 
-            let prfs = map ($ maxChar) [startsWithOne, addAutomatonPrf, generalLtDef, generalLte, doubleDef, subDef, generalC]
+            let prfs = map ($ maxChar) [startsWithOne, addAutomatonPrf, generalLtDef, generalLte, doubleDef, subDef, addCorrectBase, successorDef, addCorrect, generalC]
 
             writeFile ("general_" ++ maxCharStr ++ "_prfs.txt") $ intercalate "\n\n" $ map walnutStr prfs
 
