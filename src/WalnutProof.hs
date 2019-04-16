@@ -85,9 +85,9 @@ generalC maxChar =
     let predicate name = Predicate (name ++ "_" ++ show maxChar)
     in Def ("C_" ++ show maxChar) Nothing $
         Op (predicate "recog" ["a","n"]) "&" $
-            Op (Op (predicate "starts_one" ["a"]) "&" (SymbolAt ("C_" ++ show maxChar ++ "_temp") "n" ./= Symbol 1))
+            Op (Op (predicate "starts_one" ["a"]) "&" (SymbolAt ("C_" ++ show maxChar) "n" ./= Symbol 1))
             "|" $
-            Op (Not (predicate "starts_one" ["a"])) "&" (SymbolAt ("C_" ++ show maxChar ++ "_temp") "n" .== Symbol 1)
+            Op (Not (predicate "starts_one" ["a"])) "&" (SymbolAt ("C_" ++ show maxChar) "n" .== Symbol 1)
 
 generalLte :: Int -> Command
 generalLte maxChar =

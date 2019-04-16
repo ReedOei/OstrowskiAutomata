@@ -92,7 +92,7 @@ main = do
             writeFile ("general_" ++ maxCharStr ++ "_prfs.txt") $ intercalate "\n\n" $ map walnutStr prfs
 
             let calpha = CAlpha.genAutomata $ map (:[]) [0..maxChar]
-            writeUtf16File ("C_" ++ maxCharStr ++ "_temp.txt") $ walnutOutput (makeAlphabetStr [digitAlphabet]) calpha
+            writeUtf16File ("C_" ++ maxCharStr ++ ".txt") $ walnutOutput (makeAlphabetStr [digitAlphabet]) calpha
 
         ["toBase", baseStr, fname] -> do
             let base = read baseStr
