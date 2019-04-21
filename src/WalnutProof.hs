@@ -74,21 +74,6 @@ instance WalnutOutput Query where
 validRep :: Query -> String -> Query -> Query
 validRep base recogName n = Predicate recogName [base, n]
 
-startsWithOne :: Int -> Command
-startsWithOne maxChar =
-    let predicate name = Predicate (name ++ "_" ++ show maxChar)
-    in Reg ("starts_one_" ++ show maxChar) (Just ("{" ++ intercalate "," (map show [1..maxChar]) ++ "}")) $
-        "1(" ++ intercalate "|" (map show [1..maxChar]) ++ ")*"
-
-generalC :: Int -> Command
-generalC maxChar =
-    let predicate name = Predicate (name ++ "_" ++ show maxChar)
-    in Def ("C_" ++ show maxChar) Nothing $
-        Op (predicate "recog" ["a","n"]) "&" $
-            Op (Op (predicate "starts_one" ["a"]) "&" (SymbolAt ("C_" ++ show maxChar) "n" ./= Symbol 1))
-            "|" $
-            Op (Not (predicate "starts_one" ["a"])) "&" (SymbolAt ("C_" ++ show maxChar) "n" .== Symbol 1)
-
 generalLte :: Int -> Command
 generalLte maxChar =
     let predicate name = Predicate (name ++ "_" ++ show maxChar)
@@ -149,7 +134,7 @@ addCorrect maxChar =
 addAutomatonPrf :: Int -> Command
 addAutomatonPrf maxChar =
     let recogName = "recog_" ++ show maxChar
-        allValid = map (validRep "a" recogName) ["x","y"]
+        allValid = map (validRep "a" recogName) ["x","y","z"]
         alg0 = Predicate ("add_alg0_" ++ show maxChar) ["x","y","w"]
         alg1 = Predicate ("add_alg1_" ++ show maxChar) ["a","w","r"]
         alg2 = Predicate ("add_alg2_" ++ show maxChar) ["a","r","s"]

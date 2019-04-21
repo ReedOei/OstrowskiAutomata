@@ -2,6 +2,9 @@ module Sturmian where
 
 import Data.List
 
+h' 0 = [0]
+h' 1 = [0,1]
+
 p :: [Integer] -> [Integer]
 p = tail . tail . p' 0 1
     where
