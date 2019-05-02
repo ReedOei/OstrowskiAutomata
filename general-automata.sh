@@ -12,10 +12,10 @@ fi
 
 max_dig="$1"
 
-stack build --profile
-stack exec -- Ostrowski general "$max_dig" +RTS -h -p
-# stack install
-# Ostrowski general "$max_dig"
+# stack build --profile
+# stack exec -- Ostrowski general "$max_dig" +RTS -h -p
+stack install
+Ostrowski general "$max_dig"
 
 mv "recog_$max_dig.txt" "$WALNUT_AUTOMATA_PATH"
 mv "lt_temp_$max_dig.txt" "$WALNUT_AUTOMATA_PATH"
