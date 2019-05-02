@@ -18,6 +18,7 @@ import Data.Ord
 import Data.Set (Set)
 import qualified Data.Set as Set
 
+import System.IO
 import System.IO.Unsafe
 
 import Util
@@ -137,7 +138,7 @@ minimizeAutomata alphabet states = prune $ map (renumber newNumbers) states
 -- For each letter in the alphabet, we can distinguish two different states x and y if that letter a from x goes to a state in a different partition than it does from y
 -- iterate distinguish until it stops changing.
 distinguish alphabet partitions = unsafePerformIO $ do
-    putStrLn $ "Minimizing, have " ++ show (length partitions) ++ " partitions, " ++ show stateNum ++ " states."
+    hPutStrLn stderr $ "Minimizing, have " ++ show (length partitions) ++ " partitions, " ++ show stateNum ++ " states."
     pure $ concatMap distinguish' partitions
     where
         stateNum = length (concat partitions)

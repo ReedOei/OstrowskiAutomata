@@ -85,8 +85,9 @@ alg0Dest state [a, b, c]
 
 data Alg1Info = Alg1Info
     { _u :: (Int, Int, Int)
-    , _v :: (Int, Int, Int)
-    , _w :: (Int, Int, Int)
+    , _v1 :: Int
+    , _v :: (Int, Int)
+    , _w :: (Int, Int)
     , _g :: Int } -- This represents the shift in the last value in the window, from the rules of the
     deriving (Show, Eq, Ord)
 makeLenses ''Alg1Info
@@ -118,8 +119,8 @@ alg1States maxChar = makeStates
         -- These symbols come from directly summing the two strings, so the range is larger
         -- Additionally, we can add 1 more to any symbol during algorithm 1, so the range must be increased accordingly
         sumAlphabet = [0..maxChar + maxChar + 1]
-        initialInfo = Alg1Info (0,0,0) (0,0,0) (0,0,0) 0
-        initialInfoList = [0,0,0,0,0,0,0,0,0,0]
+        initialInfo = Alg1Info (0,0,0) 0 (0,0) (0,0) 0
+        initialInfoList = [0,0,0,0,0,0,0,0,0]
         initial = State 0 (isFinalAlg1 initialInfoList) Map.empty initialInfo
 
 
@@ -131,50 +132,49 @@ alg1States maxChar = makeStates
         -- TODO: Completely remvoe v1, w1, since they always have to be the same anyway
 
         alphabet = concats [tail fracAlphabet, sumAlphabet, digitAlphabet]
-        valid [v1, v2, v3, w1, w2, w3, u1, u2, u3, g] = sameZeroes [u1,u2,u3] [v1,v2,v3] &&
-                                                        sameZeroes [u1,u2,u3] [w1,w2,w3] &&
+        valid [v1, v2, v3, w2, w3, u1, u2, u3, g] = sameZeroes [u1,u2,u3] [v1,v2,v3] &&
+                                                        sameZeroes [u1,u2,u3] [v1,w2,w3] &&
                                                         startZeroes [u1,u2,u3] &&
-                                                        v1 == w1 &&
                                                         (if g == 1 then v1 <= u1 && v2 <= u2 && v3 == u3 - 1 else True) &&
                                                         not (null (mapMaybe (alg1Dest state) alphabet))
-            where state = State 0 0 Map.empty $ Alg1Info (u1,u2,u3) (v1,v2,v3) (w1,w2,w3) g
+            where state = State 0 0 Map.empty $ Alg1Info (u1,u2,u3) v1 (v2,v3) (w2,w3) g
 
-        makeStates = initial : zipWith go [1..] (filter valid $ concats (replicate 3 sumAlphabet ++ replicate 3 digitAlphabet ++ replicate 3 fracAlphabet ++ [[0,1]]))
+        makeStates = initial : zipWith go [1..] (filter valid $ concats (replicate 3 sumAlphabet ++ replicate 2 digitAlphabet ++ replicate 3 fracAlphabet ++ [[0,1]]))
             where
-                go num l@[v1, v2, v3, w1, w2, w3, u1, u2, u3, g] =
-                    State num (isFinalAlg1 l) Map.empty $ Alg1Info (u1,u2,u3) (v1,v2,v3) (w1,w2,w3) g
+                go num l@[v1, v2, v3, w2, w3, u1, u2, u3, g] =
+                    State num (isFinalAlg1 l) Map.empty $ Alg1Info (u1,u2,u3) v1 (v2,v3) (w2,w3) g
 
 isFinalAlg1 :: [Int] -> Int
-isFinalAlg1 [v1, v2, v3, w1, w2, w3, u1, u2, u3, g] =
+isFinalAlg1 [v1, v2, v3, w2, w3, u1, u2, u3, g] =
     let boolVal
             -- Revert A1
-            | g == 1 = isFinalAlg1 [v1 - 1, v2 + u2 + 1, 0, w1, w2, w3, u1, u2, u3, 0] == 1
+            | g == 1 = isFinalAlg1 [v1 - 1, v2 + u2 + 1, 0, w2, w3, u1, u2, u3, 0] == 1
             -- B1
-            | v1 < u1 && v2 > u2 && v3 == 0 = (w1 == v1+1) && (w2 == v2-u2-1) && (w3 == u3-1)
+            | v1 < u1 && v2 > u2 && v3 == 0 = (w2 == v2-u2-1) && (w3 == u3-1)
             -- B2
-            | v1 < u1 && v2 >= u2 && v3 > 0 && v3 <= u3 = (w1 == v1+1) && (w2 == v2-u2) && (w3 == v3-1)
+            | v1 < u1 && v2 >= u2 && v3 > 0 && v3 <= u3 = (w2 == v2-u2) && (w3 == v3-1)
             -- B3
-            | v1 < u1 && v2 >= u2 && v3 > u3 = (w1 == v1+1) && (w2 == v2-u2+1) && (w3 == v3-u3-1)
+            | v1 < u1 && v2 >= u2 && v3 > u3 = (w2 == v2-u2+1) && (w3 == v3-u3-1)
             -- B4
-            | v2 < u2 && v3 >= u3 = (w1 == v1) && (w2 == v2+1) && (w3 == v3-u3)
+            | v2 < u2 && v3 >= u3 = (w2 == v2+1) && (w3 == v3-u3)
             -- B5
-            | otherwise = (w1 == v1) && (w2 == v2) && (w3 == v3)
+            | otherwise = (w2 == v2) && (w3 == v3)
     in if boolVal then 1 else 0
 
 alg1Dest :: State Alg1Info -> [Int] -> Maybe Alg1Info
 alg1Dest state [u4, v4', w4]
-    | v2 < u2 && v3 > u3 && v4 == 0 && v1 == w1 =
-        if v2 + 1 == w2 then Just $ Alg1Info (u2,u3,u4) (v2+1,v3-(u3+1),u4-1) (w2,w3,w4) 1
+    | v2 < u2 && v3 > u3 && v4 == 0 =
+        if v2 + 1 == w2 then Just $ Alg1Info (u2,u3,u4) (v2+1) (v3-(u3+1),u4-1) (w3,w4) 1
         else Nothing
-    | v2 < u2 && v3 >= u3 && v3 <= 2*u3 && v4 > 0 && v1 == w1 =
-        if v2+1 == w2 then Just $ Alg1Info (u2,u3,u4) (v2+1,v3-u3,v4-1) (w2,w3,w4) 0
+    | v2 < u2 && v3 >= u3 && v3 <= 2*u3 && v4 > 0 =
+        if v2+1 == w2 then Just $ Alg1Info (u2,u3,u4) (v2+1) (v3-u3,v4-1) (w3,w4) 0
         else Nothing
-    | v1 == w1 && v2 == w2 = Just $ Alg1Info (u2,u3,u4) (v2,v3,v4) (w2,w3,w4) 0
+    | v2 == w2 = Just $ Alg1Info (u2,u3,u4) v2 (v3,v4) (w3,w4) 0
     | otherwise = Nothing
     where
         (u1,u2,u3) = state^.info.u
-        (v1,v2,v3) = state^.info.v
-        (w1,w2,w3) = state^.info.w
+        (v2,v3) = state^.info.v
+        (w2,w3) = state^.info.w
         gVal = state^.info.g
         v4 = v4' + gVal
 

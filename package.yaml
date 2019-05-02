@@ -33,6 +33,7 @@ dependencies:
 - parsec3-numbers
 - turtle
 - mtl
+- regex-pcre
 
 library:
   source-dirs: src

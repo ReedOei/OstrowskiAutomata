@@ -1,9 +1,17 @@
+{-# LANGUAGE FlexibleContexts #-}
+
 module Sturmian where
 
 import Data.List
 
+import Text.Regex.PCRE
+
 h' 0 = [0]
 h' 1 = [0,1]
+
+matching reps pat = filter (\x -> reverse (showRep x) =~ pat) [1..]
+    where
+        showRep = concatMap show . rep reps
 
 p :: [Integer] -> [Integer]
 p = tail . tail . p' 0 1

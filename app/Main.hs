@@ -5,6 +5,7 @@ import Data.List
 import Automata
 import AutomataParser
 import BaseNAutomata
+import BaseNAutomataAlt
 import qualified CAlpha
 import Lib
 import NumerationSystem
@@ -102,7 +103,19 @@ main = do
             let numSys = readNumSys numSysStr
 
             let newNumSys = replicate (length numSys) [0..base - 1]
-            let output = toBaseN base numSys states
+            let output = BaseNAutomata.toBaseN base numSys states
+
+            putStrLn $ walnutOutput (makeAlphabetStr newNumSys) output
+
+        ["toBaseAlt", baseStr, fname] -> do
+            let base = read baseStr
+
+            (numSysStr, states) <- parseAutomata <$> readUtf16File fname
+
+            let numSys = readNumSys numSysStr
+
+            let newNumSys = replicate (length numSys) [0..base - 1]
+            let output = BaseNAutomataAlt.toBaseN base numSys states
 
             putStrLn $ walnutOutput (makeAlphabetStr newNumSys) output
 
